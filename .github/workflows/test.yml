@@ -18,4 +18,4 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - name: Super Duper Linter
-        uses: JustinGrote/Super-Duper-Linter@v0.0.1
+        uses: ./
