@@ -1,0 +1,8 @@
+######################
+# Set the entrypoint #
+######################
+FROM mcr.microsoft.com/powershell:lts-alpine-3.10
+RUN apk add --no-cache \
+    git
+COPY SuperDuperLinter.ps1 /action/SuperDuperLinter.ps1
+ENTRYPOINT ["/action/SuperDuperLinter.ps1"]
