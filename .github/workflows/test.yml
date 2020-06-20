@@ -17,5 +17,10 @@ jobs:
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
       - uses: actions/checkout@v2
-      - name: Super Duper Linter
+      - shell: pwsh
+        run: |
+          dir env:
+      - name: Super Duper Linter - Local
+        uses: ./Tests
+      - name: Super Duper Linter - Docker Hub
         uses: ./

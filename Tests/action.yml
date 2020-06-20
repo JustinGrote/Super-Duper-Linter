@@ -1,4 +1,4 @@
-name: 'Super Duper Linter'
+name: 'Super Duper Linter Test'
 description: 'Lints and validates code files in your repository, very helpful for Pull Requests!'
 # inputs:
 #   who-to-greet:  # id of input
@@ -13,4 +13,4 @@ runs:
   image: 'jgrote/superduperlinter:latest'
 branding:
   icon: check-circle
-  color: green
+  color: purple
