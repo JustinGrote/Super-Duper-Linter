@@ -10,7 +10,7 @@ description: 'Lints and validates code files in your repository, very helpful fo
 #     description: 'The time we greeted you'
 runs:
   using: 'docker'
-  image: 'jgrote/superduperlinter:latest'
+  image: 'Dockerfile'
 branding:
   icon: check-circle
   color: purple
