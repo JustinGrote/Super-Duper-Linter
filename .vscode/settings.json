@@ -4,5 +4,6 @@
     "github-actions.workflows.pinned.workflows": [
         ".github/workflows/test.yml"
     ],
-    "powershell.powerShellDefaultVersion": "Powershell"
+    "powershell.powerShellDefaultVersion": "Powershell",
+    "files.eol": "\n"
 }

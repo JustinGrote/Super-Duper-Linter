@@ -17,8 +17,20 @@ RUN apk --no-cache add \
 FROM apkinstall AS hadolint
 COPY --from=hadolint/hadolint /bin/hadolint /usr/bin
 
+# #####################
+# # Install Go Linter #
+# #####################
+FROM hadolint AS go
+ARG GO_VERSION='v1.27.0'
+RUN wget -O- -nvq https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s "$GO_VERSION"
 
-FROM hadolint AS entrypoint
+# ##################
+# # Install TFLint #
+# ##################
+FROM go AS tflint
+COPY --from=wata727/tflint /usr/local/bin/tflint /usr/bin
+
+FROM tflint AS entrypoint
 COPY entrypoint.ps1 /action/
 COPY SuperDuperLinter /action/SuperDuperLinter
 COPY languages /action/languages
@@ -26,7 +38,7 @@ ENTRYPOINT ["/action/entrypoint.ps1"]
 
 
 #TEMPORARY FIXME: Replace with individual actions or language-provided directives
-FROM entrypoint AS super-linter-compatibility
+FROM entrypoint AS super-linter-compatibility-apk
 ####################
 # Run APK installs #
 ####################
@@ -48,6 +60,7 @@ RUN apk add --no-cache \
 # ####################
 # # Run NPM Installs #
 # ####################
+FROM super-linter-compatibility-apk AS super-linter-compatibility-npm
 RUN npm config set package-lock false \
     && npm config set loglevel error \
     && npm -g --no-cache install \
@@ -85,35 +98,37 @@ RUN npm config set package-lock false \
 #  # I think we could fix this with path but not sure the language...
 #  # https://github.com/nodejs/docker-node/blob/master/docs/BestPractices.md
 
-# ####################
-# # Run GEM installs #
-# ####################
-# RUN gem install rubocop:0.74.0 rubocop-rails rubocop-github:0.13.0
+####################
+# Run GEM installs #
+####################
+FROM super-linter-compatibility-npm AS ruby
+RUN gem install rubocop:0.74.0 rubocop-rails rubocop-github:0.13.0
 
-# # Need to fix the version as it installs 'rubocop:0.85.1' as a dep, and forces the default
-# # We then need to promot the correct verion, uninstall, and fix deps
-# RUN sh -c 'gem install --default rubocop:0.74.0;  yes | gem uninstall rubocop:0.85.1 -a -x -I; gem install rubocop:0.74.0'
+# Need to fix the version as it installs 'rubocop:0.85.1' as a dep, and forces the default
+# We then need to promot the correct verion, uninstall, and fix deps
+RUN sh -c 'gem install --default rubocop:0.74.0;  yes | gem uninstall rubocop:0.85.1 -a -x -I; gem install rubocop:0.74.0'
 
-# ######################
-# # Install shellcheck #
-# ######################
-# RUN wget -qO- "https://github.com/koalaman/shellcheck/releases/download/stable/shellcheck-stable.linux.x86_64.tar.xz" | tar -xJv \
-#     && mv "shellcheck-stable/shellcheck" /usr/bin/
+######################
+# Install shellcheck #
+######################
+FROM ruby AS bash
+RUN wget -qO- "https://github.com/koalaman/shellcheck/releases/download/stable/shellcheck-stable.linux.x86_64.tar.xz" | tar -xJv \
+    && mv "shellcheck-stable/shellcheck" /usr/bin/
 
-# #####################
-# # Install Go Linter #
-# #####################
-# ARG GO_VERSION='v1.27.0'
-# RUN wget -O- -nvq https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s "$GO_VERSION"
 
-# ##################
-# # Install TFLint #
-# ##################
-# RUN curl -Ls "$(curl -Ls https://api.github.com/repos/terraform-linters/tflint/releases/latest | grep -o -E "https://.+?_linux_amd64.zip")" -o tflint.zip && unzip tflint.zip && rm tflint.zip \
-#     && mv "tflint" /usr/bin/
 
 # ##################
 # # Install dotenv-linter #
 # ##################
-# RUN wget "https://github.com/dotenv-linter/dotenv-linter/releases/latest/download/dotenv-linter-alpine-x86_64.tar.gz" -O - -q | tar -xzf - \
-#     && mv "dotenv-linter" /usr/bin
+FROM bash AS env
+RUN wget "https://github.com/dotenv-linter/dotenv-linter/releases/latest/download/dotenv-linter-alpine-x86_64.tar.gz" -O - -q | tar -xzf - \
+    && mv "dotenv-linter" /usr/bin
+
+# PyLint
+FROM env AS pylint
+RUN apk add python3-dev \ 
+&& pip3 install --upgrade pip \
+&& pip3 install pylint
+
+FROM pylint AS yamllint
+RUN pip3 install yamllint

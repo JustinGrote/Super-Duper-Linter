@@ -1,0 +1,19 @@
+#A unique name for your linter
+name: typescript-standard
+
+#A .NET regular expression that matches the file paths that this linter should process. Multiple are supported if you specify this as an array
+filematch: '\.ts$' 
+#The base command for the linter, either an absolute path or an executable that's available in the $PATH
+command: standard
+config: .eslintrc.yml
+#Command line arguments to pass to the linter. Variables are accepted in Github actions-style ${{ VARNAME }} format
+#PATH: One or more paths that will be passed to the command.
+#CONFIG: Will be substituted with either the default or user-supplied linter configuration
+#TODO: Support multiple path styles (commas, stdin, etc.)
+
+args: 
+- '--parser'
+- '@typescript-eslint/parser'
+- '--plugin'
+- '@typescript-eslint/eslint-plugin'
+- '${{ CONFIG }}'
