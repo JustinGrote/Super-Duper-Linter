@@ -1,0 +1,7 @@
+name: pester2
+filematch: '.pstr2'
+command: pwsh
+args: 
+  - '-f'
+  - 'pwshlint.ps1'
+  - 'psscriptanalyzer.psd1'

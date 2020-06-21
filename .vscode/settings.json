@@ -3,5 +3,6 @@
     "github-actions.workflows.pinned.refresh.interval": 5,
     "github-actions.workflows.pinned.workflows": [
         ".github/workflows/test.yml"
-    ]
+    ],
+    "powershell.powerShellDefaultVersion": "Powershell"
 }

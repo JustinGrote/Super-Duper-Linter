@@ -1,0 +1,1 @@
+$unreferencedvariable = 'something'

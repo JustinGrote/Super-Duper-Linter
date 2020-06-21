@@ -1,0 +1,8 @@
+name: pester
+filematch: '.pstr'
+command: pwsh
+config: pester.psd1
+args: 
+  - '-f'
+  - '${{ CONFIG }}'
+  - 'psscriptanalyzer.psd1'

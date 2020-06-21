@@ -1,0 +1,3 @@
+function goodscript {
+    'hello world!'
+}
