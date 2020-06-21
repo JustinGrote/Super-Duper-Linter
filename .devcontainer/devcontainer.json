@@ -22,8 +22,8 @@
 	// Use 'forwardPorts' to make a list of ports inside the container available locally.
 	// "forwardPorts": [],
 
-	// Uncomment the next line to run commands after the container is created - for example installing curl.
-	"postCreateCommand": "mkdir /github && ln -s /workspaces/Super-Duper-Linter/Tests/Mocks/codeToLint /github/workspace",
+	// Setup dev to use source, makes debugging easier
+	"postCreateCommand": "mkdir /github && ln -s /workspaces/Super-Duper-Linter/Tests/Mocks/codeToLint /github/workspace & rm -rf /action & ln -s /workspaces/Super-Duper-Linter /action",
 
 	// Uncomment when using a ptrace-based debugger like C++, Go, and Rust
 	// "runArgs": [ "--cap-add=SYS_PTRACE", "--security-opt", "seccomp=unconfined" ],

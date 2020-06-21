@@ -13,21 +13,20 @@ RUN apk --no-cache add \
     git \
     npm nodejs
 
+#Docker Hadolint
+FROM apkinstall AS hadolint
+COPY --from=hadolint/hadolint /bin/hadolint /usr/bin
 
-FROM apkinstall AS entrypoint
+
+FROM hadolint AS entrypoint
 COPY entrypoint.ps1 /action/
 COPY SuperDuperLinter /action/SuperDuperLinter
 COPY languages /action/languages
-
-#Docker Hadolint
-COPY --from=hadolint/hadolint /bin/hadolint /usr/bin
-
 ENTRYPOINT ["/action/entrypoint.ps1"]
 
 
-
 #TEMPORARY FIXME: Replace with individual actions or language-provided directives
-
+FROM entrypoint AS super-linter-compatibility
 ####################
 # Run APK installs #
 ####################
