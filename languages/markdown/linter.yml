@@ -5,7 +5,7 @@ filematch: '\.md$'
 #The base command for the linter, either an absolute path or an executable that's available in the $PATH
 command: markdownlint
 config: .markdown-lint.yml
-problemMatcher: matcher.json
+problemMatcher: matcher.jsonc
 #Command line arguments to pass to the linter. Variables are accepted in Github actions-style ${{ VARNAME }} format
 #PATH: One or more paths that will be passed to the command.
 #CONFIG: Will be substituted with either the default or user-supplied linter configuration

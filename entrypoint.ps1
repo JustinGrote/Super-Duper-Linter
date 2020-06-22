@@ -42,9 +42,9 @@ $failureCount = $LinterResult
 | Measure-Object
 | Foreach-Object count
 
-"Exiting with $failureCount failures"
-
 #Exit based on failures. Anything other than zero will fail the action
 if ($failureCount -ne 0) {
-    throw "Failed with $failureCount errors"
+    throw "Super Duper Linter found $failureCount errors"
+} else {
+    "=== Super Duper Linter Complete! ==="
 }

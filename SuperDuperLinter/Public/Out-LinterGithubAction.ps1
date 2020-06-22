@@ -20,13 +20,14 @@ function Out-LinterGithubAction {
             Write-Host -NoNewline -ForegroundColor $statuscolor $linter.status
             Write-Host " - $($linter.filesToLint)"
             #Enable problem matcher if present
-            if ($linter.problemMatcher) {
+            if ($linter.status -ne 'success' -and $linter.problemMatcher) {
                 #Required due to running in container
                 #https://github.com/actions/toolkit/issues/305
                 #TODO: Find out if there is a more appropriate TEMP directory to put this
-                $matcherFilePath = "$env:HOME/$($linter.name).json"
+                $matcherFilePath = "/github/home/$($linter.name).json"
+                #FIXME: Resolve from environment variables
                 Copy-Item -Path $Linter.problemMatcher -Destination $matcherFilePath
-                Write-Output "::add-matcher::$env:HOME/$(Split-Path -Leaf $matcherFilePath)"
+                Write-Output "::add-matcher::/home/runner/work/_temp/_github_home/$(Split-Path -Leaf $matcherFilePath)"
             }
 
             try {
