@@ -30,15 +30,9 @@ RUN wget -O- -nvq https://raw.githubusercontent.com/golangci/golangci-lint/maste
 FROM go AS tflint
 COPY --from=wata727/tflint /usr/local/bin/tflint /usr/bin
 
-FROM tflint AS entrypoint
-COPY entrypoint.ps1 /action/
-COPY SuperDuperLinter /action/SuperDuperLinter
-COPY languages /action/languages
-ENTRYPOINT ["/action/entrypoint.ps1"]
-
 
 #TEMPORARY FIXME: Replace with individual actions or language-provided directives
-FROM entrypoint AS super-linter-compatibility-apk
+FROM tflint AS super-linter-compatibility-apk
 ####################
 # Run APK installs #
 ####################
@@ -132,3 +126,9 @@ RUN apk add python3-dev \
 
 FROM pylint AS yamllint
 RUN pip3 install yamllint
+
+FROM yamllint AS entrypoint
+COPY entrypoint.ps1 /action/
+COPY SuperDuperLinter /action/SuperDuperLinter
+COPY languages /action/languages
+ENTRYPOINT ["/action/entrypoint.ps1"]

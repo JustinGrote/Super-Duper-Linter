@@ -1,10 +1,9 @@
 name: 'Super Duper Linter'
 description: 'Lints and validates code files in your repository, very helpful for Pull Requests!'
-# inputs:
-#   who-to-greet:  # id of input
-#     description: 'Who to greet'
-#     required: true
-#     default: 'World'
+inputs:
+  name:
+    description: Name(s) of the linters you wish to run. Runs all by default
+    required: false
 # outputs:
 #   time: # id of output
 #     description: 'The time we greeted you'

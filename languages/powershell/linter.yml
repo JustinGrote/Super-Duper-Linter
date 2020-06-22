@@ -3,6 +3,10 @@ name: powershell
 
 #A .NET regular expression that matches the file paths that this linter should process. Multiple are supported if you specify this as an array
 filematch: '\.ps[md]?1$' 
+#Specify a file mode for the linter
+#Single (Default): Only takes a single file as a linter argument and must be run once per file
+#Multiple: Accepts multiple space-delimited file paths at the command line
+filemode: multiple
 #The base command for the linter, either an absolute path or an executable that's available in the $PATH
 command: pwshlint.ps1
 #An optional config that the program uses. You must pass this in later.

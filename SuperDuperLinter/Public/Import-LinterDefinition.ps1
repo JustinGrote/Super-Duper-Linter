@@ -10,11 +10,17 @@ function Import-LinterDefinition ([String[]]$LinterDefinitionPath, [String[]]$Li
             Push-Location -StackName $linterDefinitionFileItem -Path (Split-Path $linterDefinitionFileItem)
             $linter = Get-Content -Raw -Path $linterDefinitionFileItem | ConvertFrom-Yaml 
 
-            #Check if command is in the path and if so then resolve that, allows BYOL (bring your own linter)
-            if (Test-Path $linter.command) {$linter.command = Resolve-Path $linter.command}
-
-            if ($linter.config) {
-                $linter.config = Resolve-Path $linter.config
+            #Checks file path properties and resolves them to their absolute paths
+            'command','config','problemMatcher' | Foreach-Object {
+                if ($linter.$PSItem) {
+                    if (Test-Path $linter.$PSItem) {
+                        $linter.$PSItem = Resolve-Path $linter.$PSItem
+                    } elseif ($psitem -eq 'command') {
+                        $linter.$PSItem = [string](Get-Command $linter.$PSItem)
+                    } else {
+                        Write-Error "$PSItem $($linter.$PSItem) was not found for $($linter.name). Please file a bug report."
+                    }
+                }
             }
 
             if (-not (Get-Command $linter.command -ErrorAction SilentlyContinue)) {

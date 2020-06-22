@@ -10,17 +10,26 @@ on:
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
   # This workflow contains a single job called "build"
-  build:
+  LinterTest:
     # The type of runner that the job will run on
     runs-on: ubuntu-latest
 
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
       - uses: actions/checkout@v2
+      #FIXME: This cache doesn't carry through to the action below. Figure out why.
+      # - uses: whoan/docker-build-with-cache-action@v5
+      #   with:
+      #     username: jgrote
+      #     password: "${{ secrets.DOCKER_HUB_PASSWORD }}"  # you don't need to manually set this secret. GitHub does it on your behalf
+      #     image_name: superduperlinter
+      #     image_tag: cicache
       - shell: pwsh
         run: |
           dir env:
       - name: Super Duper Linter - Local
         uses: ./Tests
-      - name: Super Duper Linter - Docker Hub
-        uses: ./
+        # with:
+        #   name: xml bash markdown
+      # - name: Super Duper Linter - Docker Hub
+      #   uses: ./

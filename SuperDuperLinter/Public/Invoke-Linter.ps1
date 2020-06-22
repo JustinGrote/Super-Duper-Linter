@@ -9,13 +9,43 @@ function Invoke-Linter {
         [Int]$ThrottleLimit = 5
     )
 
+
+    #Filter out linters that don't need to be run
+    [HashTable[]]$LinterDefinition = $linterDefinition | Where-Object {
+        if (-not $PSItem.filesToLint) {
+            Write-Verbose "$($PSItem.name): No files matched. Skipping..."
+        } else {
+            $true
+        }
+    }
+    function Clone-Object ($InputObject) {
+        <#
+        .SYNOPSIS
+        Use the serializer to create an independent copy of an object, useful when using an object as a template
+        #>
+        [psserializer]::Deserialize(
+            [psserializer]::Serialize(
+                $InputObject
+            )
+        )
+    }
+    #Break out linters into individual files for those that need it (assume by default)
+    [HashTable[]]$LinterDefinition = Foreach ($linter in $LinterDefinition) {
+        if ($linter.filemode -ne 'multiple' -and $linter.filestolint.count -eq 1) {
+            Write-Output $linter
+        } else {
+            foreach ($linterFilePath in $linter.filesToLint) {
+                Write-Verbose "$($linter.name): Creating runner for $linterfilePath..."
+                $newLinter = Clone-Object $linter
+                $newLinter.filesToLint = $linterFilePath
+                Write-Output $newLinter
+            }
+        }
+    }
+
     $LinterDefinition | ForEach-Object -ThrottleLimit $ThrottleLimit -Parallel {
         $linter = $PSItem
-        if (-not $linter.filesToLint) {
-            Write-Verbose "$($linter.name): No files matched. Skipping..."
-            continue
-        }
-        
+
         $linterArgs = $linter.args
         $linter.result = & $linter.command @linterArgs $linter.filesToLint *>&1
 
@@ -24,7 +54,7 @@ function Invoke-Linter {
             Write-Host -fore red "$($linter.name) FAILED: $LASTEXITCODE"
         } else {
             Write-Host $result
-            Write-Host -fore green "$($linter.name): SUCCEEDED"
+            Write-Host -fore green "$($linter.name): SUCCEEDED - $($linter.filesToLint)"
             $linter.status = 'success'
         }
 

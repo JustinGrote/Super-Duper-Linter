@@ -7,8 +7,8 @@ param (
     [String[]]$LinterDefinitionPath = "$PSScriptRoot/languages",
     #The filename of your linter definition. This usually does not have to change
     [String[]]$LinterDefinitionFileName = 'linter.yml',
-    #Which linters to include, by name
-    [String[]]$Name
+    #Which linters to include, by name. This will be set by the Github Action "Name" input
+    [String[]]$Name = $($ENV:INPUT_NAME -split '[ ;,\n]')
 )
 
 if (-not $Path) {
@@ -29,18 +29,22 @@ if ($Name) {
 
 $linters = $linters | Add-LinterFiles -Path $Path
 
+#FIXME: Move to Import-LinterDefinition
 
 [HashTable[]]$linterResult = Invoke-Linter -LinterDefinition $linters
 
 #TODO: More structured output
-$linterResult.foreach{
-    $statuscolor = if ($PSItem.status -eq 'success') { 'green' } else { 'red' }
-    Write-Host -NoNewline "=== $($PSItem.name): "
-    Write-Host -ForegroundColor $statuscolor $PSItem.status
-    if ($PSItem.name -eq 'powershell') {
-        Write-Host -Fore Cyan ($PSItem.result | Format-Table -prop ScriptName,RuleName,Severity,Message | Out-String)
-    } else {
-        Write-Host -Fore Cyan ($PSItem.result | Format-List | Out-String)
-    }
-    
+Out-LinterGithubAction -LinterResult $LinterResult
+
+#Set exit code to number of errors
+$failureCount = $LinterResult
+| Where-Object status -eq 'failure'
+| Measure-Object
+| Foreach-Object count
+
+"Exiting with $failureCount failures"
+
+#Exit based on failures. Anything other than zero will fail the action
+if ($failureCount -ne 0) {
+    throw "Failed with $failureCount errors"
 }
