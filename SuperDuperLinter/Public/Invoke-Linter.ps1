@@ -31,7 +31,7 @@ function Invoke-Linter {
     }
     #Break out linters into individual files for those that need it (assume by default)
     [HashTable[]]$LinterDefinition = Foreach ($linter in $LinterDefinition) {
-        if ($linter.filemode -ne 'multiple' -and $linter.filestolint.count -eq 1) {
+        if ($linter.filemode -eq 'multiple' -or $linter.filestolint.count -eq 1) {
             Write-Output $linter
         } else {
             foreach ($linterFilePath in $linter.filesToLint) {

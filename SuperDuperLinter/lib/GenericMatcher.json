@@ -1,0 +1,19 @@
+//Inspired by https://github.com/microsoft/vscode/blob/f6bd0bac9b1ed4d207772ae99ba72a1755beb4c6/src/vs/workbench/contrib/terminal/browser/terminalLinkHandler.ts#L40-L47
+{
+    "problemMatcher": [
+        {
+            "owner": "ColonSeparated",
+            "pattern": [
+                {
+                    "regexp": "^(.+):(\\d+):(\\d+):\\s(note|warning|error):\\s(.*)\\s\\[(SC\\d+)\\]$",
+                    "file": 1,
+                    "line": 2,
+                    "column": 3,
+                    "severity": 4,
+                    "message": 5,
+                    "code": 6
+                }
+            ]
+        }
+    ]
+}
