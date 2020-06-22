@@ -18,8 +18,8 @@ jobs:
       - name: Docker Run
         run: /usr/bin/docker run --name superduperlintertest -e INPUT_NAME -e HOME --workdir /github/workspace -v "/home/runner/work/_temp/_github_home:/github/home" -v "/home/runner/work/Super-Duper-Linter/Super-Duper-Linter:/github/workspace" my_awesome_image:latest
         continue-on-error: true
-        env:
-          INPUT_NAME: markdown
+        # env:
+        #   INPUT_NAME: xml
 
   # runs-on: ubuntu-latest
   # needs: Build
