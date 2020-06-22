@@ -9,4 +9,4 @@ Inspired by github/super-linter, but using Powershell.
 - Linter Plugin Support
 - Linters run in parallel for huge performance increase
 - Files to lint are evaluated prior to run, better performance
-- Linter results available in both prettyprint and JSON
+- Linter Results are posted as annotations to the action, where possible
