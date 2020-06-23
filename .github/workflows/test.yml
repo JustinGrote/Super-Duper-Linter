@@ -17,5 +17,4 @@ jobs:
         uses: ./Tests
         continue-on-error: true
         with:
-          debug: false
           path: "Tests/Mocks/codeToLint/test"

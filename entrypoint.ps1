@@ -12,6 +12,10 @@ param (
     #Enable Verbose and Debug Logging
     [Switch]$EnableDebug = $([bool]$ENV:INPUT_DEBUG)
 )
+Import-Module $PSScriptRoot/Utils/GHActionUtils.psm1
+
+Push-GHAGroup 'Startup'
+
 if ($EnableDebug) {
     #TODO: Proxy Verbose and Warning commands and send them to github
     $VerbosePreference = 'continue'
@@ -28,7 +32,9 @@ if (-not (Test-Path $Path)) {
 }
 
 Import-Module $PSScriptRoot/SuperDuperLinter/SuperDuperLinter.psm1 -Force
+Pop-GHAGroup #Startup
 
+Push-GHAGroup 'Import Linter Definition and Identify Files To Lint'
 $linters = Import-LinterDefinition $LinterDefinitionPath $LinterDefinitionFileName
 
 if ($Name) {
@@ -36,10 +42,11 @@ if ($Name) {
 }
 
 $linters = $linters | Add-LinterFiles -Path $Path
+Pop-GHAGroup #Import
 
-#FIXME: Move to Import-LinterDefinition
-
+Push-GHAGroup 'Run Linters'
 [HashTable[]]$linterResult = Invoke-Linter -LinterDefinition $linters
+Pop-GHAGroup #Linters
 
 #TODO: More structured output
 Out-LinterGithubAction -LinterResult $LinterResult

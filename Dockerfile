@@ -130,5 +130,6 @@ RUN pip3 install yamllint
 FROM yamllint AS entrypoint
 COPY entrypoint.ps1 /action/
 COPY SuperDuperLinter /action/SuperDuperLinter
+COPY Utils /action/Utils
 COPY linters /action/linters
 ENTRYPOINT ["/action/entrypoint.ps1"]

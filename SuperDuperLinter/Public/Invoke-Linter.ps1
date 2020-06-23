@@ -45,21 +45,25 @@ function Invoke-Linter {
 
     $LinterDefinition | ForEach-Object -ThrottleLimit $ThrottleLimit -Parallel {
         $linter = $PSItem
+        $icons = @{
+            success = "`u{2705}"
+            failure = "`u{274C}"
+        }
 
         $linterArgs = $linter.args
         $linter.result = & $linter.command @linterArgs $linter.filesToLint *>&1
-
-        if ($LASTEXITCODE -ne 0) {
-            $linter.status = 'failure'
-            Write-Host -fore red "$($linter.name) FAILED: $LASTEXITCODE"
-        } else {
-            Write-Host $result
-            Write-Host -fore green "$($linter.name): SUCCEEDED - $($linter.filesToLint)"
-            $linter.status = 'success'
+        $linterExitCode = $LASTEXITCODE
+        $linter.filesToLint.foreach{
+            if ($linterExitCode -ne 0) {
+                $linter.status = 'failure'
+                #Write-Verbose "$($linter.name) exited with status - $linterExitCode"
+            } else {
+                $linter.status = 'success'
+            }
+            Write-Host "[$($icons[$linter.status])] $PSItem - $($linter.name)"
         }
-
+        Write-Host -Fore Cyan $result
         #Return the formatted linter result
         Write-Output $linter
     }
-
 }
