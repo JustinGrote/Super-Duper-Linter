@@ -1,10 +1,8 @@
 name: SuperDuperLinter Action Test
 on:
   push:
-
 jobs:
-  #This is a separate job because the docker task below will pull the file before it is built if in same job
-  Build:
+  SuperDuperLinterTest:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -14,23 +12,10 @@ jobs:
           password: "${{ secrets.DOCKER_HUB_PASSWORD }}"  # you don't need to manually set this secret. GitHub does it on your behalf
           image_name: superduperlinter
           image_tag: cicache
-          push_image_and_stages: false
-      - name: Docker Run
-        run: /usr/bin/docker run --name superduperlintertest -e INPUT_NAME -e HOME --workdir /github/workspace -v "/home/runner/work/_temp/_github_home:/github/home" -v "/home/runner/work/Super-Duper-Linter/Super-Duper-Linter:/github/workspace" my_awesome_image:latest
+          push_image_and_stages: false # Set this to true once when changing the dockerfile to cache the new layers
+      - name: Super Duper Linter - Test Dockerfile
+        uses: ./Tests
         continue-on-error: true
-        # env:
-        #   INPUT_NAME: xml
-
-  # runs-on: ubuntu-latest
-  # needs: Build
-  # steps:
-  #   - uses: actions/checkout@v2
-  #     - name: Super Duper Linter - Run from cicache
-  #     uses: docker://jgrote/superduperlinter:cicache
-  #     continue-on-error: true
-  #     with:
-  #       NAME: markdown
-
-      #FIXME: Github Action doesn't use docker cache for some reason
-      # - name: Super Duper Linter - Docker Hub
-      #   uses: ./
+        with:
+          debug: false
+          path: "Tests/Mocks/codeToLint/test"
