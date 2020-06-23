@@ -2,20 +2,28 @@
 #requires -version 7 -module powershell-yaml
 param (
     #Path to the file(s) or directories to lint. This defaults to your entire repository
-    [String[]]$Path = $ENV:GITHUB_WORKSPACE,
+    [String[]]$Path = $ENV:INPUT_PATH,
     #Where to find the language definitions. Definitions are evaluated in order, with the first one found being accepted
     [String[]]$LinterDefinitionPath = "$PSScriptRoot/languages",
     #The filename of your linter definition. This usually does not have to change
     [String[]]$LinterDefinitionFileName = 'linter.yml',
     #Which linters to include, by name. This will be set by the Github Action "Name" input
-    [String[]]$Name = $($ENV:INPUT_NAME -split '[ ;,\n]')
+    [String[]]$Name = $($ENV:INPUT_NAME -split '[ ;,\n]'),
+    #Enable Verbose and Debug Logging
+    [Switch]$EnableDebug = $([bool]$ENV:INPUT_DEBUG)
 )
+if ($EnableDebug) {
+    #TODO: Proxy Verbose and Warning commands and send them to github
+    $VerbosePreference = 'continue'
+    $WarningPreference = 'continue'
+}
 
 if (-not $Path) {
-    $Path = '/github/workspace'
+    #Prepend the mount directory
+    $Path = Join-Path '/github/workspace' $Path
 }
 if (-not (Test-Path $Path)) {
-    write-host -fore red "ERROR: You must mount a path containing files you wish to inspect to $Path to use the linter. If you are trying to test locally, add -v /path/to/test:/github/workspace to your docker run command"
+    write-host -fore red "ERROR: $Path not found. If you are trying to test locally, add -v /path/to/test:/github/workspace to your docker run command"
     exit 1
 }
 

@@ -4,6 +4,12 @@ inputs:
   name:
     description: Name(s) of the linters you wish to run. Runs all by default
     required: false
+  path:
+    description: Specify a relative path of your repository to lint. Only files in this path will be processed
+    required: false
+  debug:
+    description: Set to True to enable advanced Powershell-level debugging
+    required: false
 # outputs:
 #   time: # id of output
 #     description: 'The time we greeted you'
