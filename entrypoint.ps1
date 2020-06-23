@@ -10,8 +10,31 @@ param (
     #Which linters to include, by name. This will be set by the Github Action "Name" input
     [String[]]$Name = $($ENV:INPUT_NAME -split '[ ;,\n]'),
     #Enable Verbose and Debug Logging
-    [Switch]$EnableDebug = $([bool]$ENV:INPUT_DEBUG)
+    [Switch]$EnableDebug = $([bool]$ENV:INPUT_DEBUG -or $ENV:ACTIONS_RUNNER_DEBUG)
 )
+
+if ($EnableDebug) {
+    $VerbosePreference = 'continue'
+    $DebugPreference = 'continue'
+}
+
+function Write-GHADebug {
+    [CmdletBinding()]
+    param(
+        [Parameter(ValueFromPipeline)][String]$Message
+    )
+    process {
+        $Message.split("`r`n").foreach{
+            "::debug::$PSItem"
+        }
+    }
+}
+New-Alias Write-Debug Write-GHADebug
+
+#Output Environment Variable Information
+write-debug "Environment Variables"
+dir env: | out-string -Width ([int32]::MaxValue) | Write-Debug
+
 Import-Module $PSScriptRoot/Utils/GHActionUtils.psm1
 
 Push-GHAGroup 'Startup'

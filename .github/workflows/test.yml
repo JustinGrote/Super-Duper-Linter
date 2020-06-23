@@ -1,6 +1,7 @@
 name: SuperDuperLinter Action Test
 on:
   push:
+  pull_request:
 jobs:
   SuperDuperLinterTest:
     runs-on: ubuntu-latest

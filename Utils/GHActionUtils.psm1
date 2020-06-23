@@ -56,7 +56,6 @@ function Get-GHAAnsi ($Name) {
     } else {
         return $ansiCollection
     }
-    
 }
 
 Export-ModuleMember -Function *
