@@ -4,7 +4,7 @@ param (
     #Path to the file(s) or directories to lint. This defaults to your entire repository
     [String[]]$Path = $ENV:INPUT_PATH,
     #Where to find the language definitions. Definitions are evaluated in order, with the first one found being accepted
-    [String[]]$LinterDefinitionPath = "$PSScriptRoot/languages",
+    [String[]]$LinterDefinitionPath = "$PSScriptRoot/linters",
     #The filename of your linter definition. This usually does not have to change
     [String[]]$LinterDefinitionFileName = 'linter.yml',
     #Which linters to include, by name. This will be set by the Github Action "Name" input

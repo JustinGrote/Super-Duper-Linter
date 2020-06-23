@@ -5,5 +5,8 @@
         ".github/workflows/test.yml"
     ],
     "powershell.powerShellDefaultVersion": "Powershell",
-    "files.eol": "\n"
+    "files.eol": "\n",
+    "vsicons.associations.folders": [
+        { "icon": "template", "extensions": ["linters"], "format": "svg", "extends": "js" }
+    ]
 }
