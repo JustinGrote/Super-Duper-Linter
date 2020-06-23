@@ -24,10 +24,10 @@ function Out-LinterGithubAction {
                 #Required due to running in container
                 #https://github.com/actions/toolkit/issues/305
                 #TODO: Find out if there is a more appropriate TEMP directory to put this
-                $matcherFilePath = "/github/home/$($linter.name).json"
+                $matcherFilePath = "$ENV:HOME/$($linter.name).json"
                 #FIXME: Resolve from environment variables
                 Copy-Item -Path $Linter.problemMatcher -Destination $matcherFilePath
-                Write-Output "::add-matcher::/home/runner/work/_temp/_github_home/$(Split-Path -Leaf $matcherFilePath)"
+                Write-Output "::add-matcher::$ENV:HOME/$(Split-Path -Leaf $matcherFilePath)"
             }
 
             try {

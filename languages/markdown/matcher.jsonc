@@ -12,7 +12,7 @@
             "pattern": [
                 {
                     "regexp": "^(\/[^:]+\/)(.+?):(\\d+):?(\\d+)? (\\w+)\/(.+?)(?: \\[Context: \"(.+)\"\\])?$",
-                    "fromPath": 1,
+                    "fromPath":1,
                     "file": 2,
                     "line": 3,
                     "column": 4,
