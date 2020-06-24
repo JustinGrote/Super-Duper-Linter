@@ -16,7 +16,7 @@ param (
     #The filename of your linter definition. This usually does not have to change
     [String[]]$LinterDefinitionFileName = 'linter.yml',
     #Name(s) of the linters you wish to run. Runs all by default
-    [String[]]$Name = $ENV:INPUT_NAME -split '[ ;,\n]'
+    [String[]]$Name = $ENV:INPUT_LINTER -split '[ ;,\n]'
 )
 Import-Module $PSScriptRoot/Utils/GHActionUtils.psm1
 Import-Module $PSScriptRoot/SuperDuperLinter/SuperDuperLinter.psm1 -Force

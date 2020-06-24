@@ -1,7 +1,7 @@
 name: 'Super Duper Linter'
 description: 'Lints and validates code files in your repository, very helpful for Pull Requests!'
 inputs:
-  name:
+  linter:
     description: Name(s) of the linters you wish to run. Runs all by default
     required: false
   path:

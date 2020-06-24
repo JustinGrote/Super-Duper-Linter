@@ -10,4 +10,7 @@ jobs:
     steps:
       - name: Super Duper Linter Test
         uses: ./Tests/act
-        #continue-on-error: true
+        with:
+          path: Tests/Mocks/codeToLint
+          linter: bash
+        continue-on-error: true

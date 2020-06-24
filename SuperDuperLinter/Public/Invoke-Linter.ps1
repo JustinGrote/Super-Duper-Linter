@@ -61,7 +61,6 @@ function Invoke-Linter {
             }
             Write-Host "[$($icons[$linter.status])] $PSItem - $($linter.name)"
         }
-        Write-Host -Fore Cyan $result
         #Return the formatted linter result
         Write-Output $linter
     }
