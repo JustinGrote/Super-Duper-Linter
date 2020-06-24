@@ -1,0 +1,13 @@
+#This is a dummy workflow file usually run from act
+name: Sandbox
+on:
+  push:
+    branches:
+      - sandbox
+jobs:
+  localTest:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Super Duper Linter Test
+        uses: ./Tests/act
+        #continue-on-error: true
