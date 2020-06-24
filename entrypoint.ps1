@@ -1,75 +1,77 @@
 #!/usr/bin/pwsh
 #requires -version 7 -module powershell-yaml
 param (
-    #Path to the file(s) or directories to lint. This defaults to your entire repository
-    [String[]]$Path = $ENV:INPUT_PATH,
+    #Where your repository is located. You should rarely if ever need to change this, the action will automatically pick it up
+    [ValidateNotNullOrEmpty()][String]$BasePath = (Get-Content -ErrorAction 'SilentlyContinue' -Path ENV:GITHUB_WORKSPACE || '/github/workspace'),
+    #Path to the file(s) or directories to lint. Wildcards are supported
+    [String[]]$Path = (Get-Content -ErrorAction 'SilentlyContinue' -Path ENV:INPUT_PATH || '.'),
+    #Explicit file paths to exclude, relative to your root directory. Wildcards are *not* supported
+    [String[]]$ExcludePath = $ENV:INPUT_INCLUDE -split '[ ;,\n]',
+    #Files patterns to include. Wildcards are supported.
+    [String[]]$Include = $ENV:INPUT_INCLUDE -split '[ ;,\n]',
+    #Files patterns to exclude. Wildcards are supported.
+    [String[]]$Exclude = $ENV:INPUT_EXCLUDE -split '[ ;,\n]',
     #Where to find the language definitions. Definitions are evaluated in order, with the first one found being accepted
     [String[]]$LinterDefinitionPath = "$PSScriptRoot/linters",
     #The filename of your linter definition. This usually does not have to change
     [String[]]$LinterDefinitionFileName = 'linter.yml',
-    #Which linters to include, by name. This will be set by the Github Action "Name" input
-    [String[]]$Name = $($ENV:INPUT_NAME -split '[ ;,\n]'),
-    #Enable Verbose and Debug Logging
-    [Switch]$EnableDebug = $([bool]$ENV:INPUT_DEBUG -or $ENV:ACTIONS_RUNNER_DEBUG)
+    #Name(s) of the linters you wish to run. Runs all by default
+    [String[]]$Name = $ENV:INPUT_NAME -split '[ ;,\n]'
 )
+Import-Module $PSScriptRoot/Utils/GHActionUtils.psm1
+Import-Module $PSScriptRoot/SuperDuperLinter/SuperDuperLinter.psm1 -Force
 
-if ($EnableDebug) {
-    $VerbosePreference = 'continue'
-    $DebugPreference = 'continue'
+GHAGroup 'Environment Information' {
+    Get-ChildItem env: | Foreach-Object {$_.name + '=' + $_.value}
 }
 
-function Write-GHADebug {
-    [CmdletBinding()]
-    param(
-        [Parameter(ValueFromPipeline)][String]$Message
-    )
-    process {
-        $Message.split("`r`n").foreach{
-            "::debug::$PSItem"
+GHAGroup 'Startup' {
+
+    Push-Location -StackName basePath $basePath
+    $candidatePaths = $Path.Foreach{
+        Join-Path -Path $BasePath -ChildPath $PSItem -Resolve -ErrorAction stop
+    }
+    $excludePath = $ExcludePath.Foreach{
+        Join-Path -Path $BasePath -ChildPath $PSItem -Resolve -ErrorAction stop
+    }
+    
+    #Apply filters
+    $candidatePaths = Get-Childitem -File -Recurse -Path $candidatePaths -Include $Include -Exclude $Exclude
+
+    function Write-GHADebug {
+        [CmdletBinding()]
+        param(
+            [Parameter(ValueFromPipeline)][String]$Message
+        )
+        process {
+            $Message.split([Environment]::newline).foreach{
+                "::debug::$PSItem"
+            }
         }
     }
-}
-New-Alias Write-Debug Write-GHADebug
-
-#Output Environment Variable Information
-write-debug "Environment Variables"
-dir env: | out-string -Width ([int32]::MaxValue) | Write-Debug
-
-Import-Module $PSScriptRoot/Utils/GHActionUtils.psm1
-
-Push-GHAGroup 'Startup'
-
-if ($EnableDebug) {
-    #TODO: Proxy Verbose and Warning commands and send them to github
-    $VerbosePreference = 'continue'
-    $WarningPreference = 'continue'
+    New-Alias Write-Debug Write-GHADebug
 }
 
-if (-not $Path) {
-    #Prepend the mount directory
-    $Path = Join-Path '/github/workspace' $Path
-}
-if (-not (Test-Path $Path)) {
-    write-host -fore red "ERROR: $Path not found. If you are trying to test locally, add -v /path/to/test:/github/workspace to your docker run command"
-    exit 1
-}
+GHAGroup 'Import Linter Definition and Identify Files To Lint' {
+    $linters = Import-LinterDefinition $LinterDefinitionPath $LinterDefinitionFileName
 
-Import-Module $PSScriptRoot/SuperDuperLinter/SuperDuperLinter.psm1 -Force
-Pop-GHAGroup #Startup
+    if ($Name) {
+        $linters = $linters | Where-Object name -in $Name
+    }
 
-Push-GHAGroup 'Import Linter Definition and Identify Files To Lint'
-$linters = Import-LinterDefinition $LinterDefinitionPath $LinterDefinitionFileName
-
-if ($Name) {
-    $linters = $linters | Where-Object name -in $Name
+    $linters = $linters | Add-LinterFiles -Path $candidatePaths
 }
 
-$linters = $linters | Add-LinterFiles -Path $Path
-Pop-GHAGroup #Import
+GHAGroup 'Files to Lint' {
+    Push-Location $BasePath 
+    $linters.filesToLint | Sort-Object -Unique | Get-GHRelativePath
+    Pop-Location
+}
 
-Push-GHAGroup 'Run Linters'
-[HashTable[]]$linterResult = Invoke-Linter -LinterDefinition $linters
-Pop-GHAGroup #Linters
+
+GHAGroup 'Run Linters' {
+    [HashTable[]]$linterResult = Invoke-Linter -LinterDefinition $linters
+}
 
 #TODO: More structured output
 Out-LinterGithubAction -LinterResult $LinterResult
@@ -86,3 +88,4 @@ if ($failureCount -ne 0) {
 } else {
     "=== Super Duper Linter Complete! ==="
 }
+Pop-Location -StackName basePath

@@ -1,5 +1,11 @@
 
-function Import-LinterDefinition ([String[]]$LinterDefinitionPath, [String[]]$LinterDefinitionFileName='linter.yml') {
+function Import-LinterDefinition {
+    [CmdletBinding()]
+    param (
+        [String[]]$LinterDefinitionPath, 
+        [String[]]$LinterDefinitionFileName='linter.yml'
+    )
+    
     $linterDefinitionFiles = foreach ($FileItem in $LinterDefinitionFileName) {
         Get-ChildItem -Recurse -Path $LinterDefinitionPath -Filter $FileItem
     }

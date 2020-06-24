@@ -9,7 +9,6 @@ function Invoke-Linter {
         [Int]$ThrottleLimit = 5
     )
 
-
     #Filter out linters that don't need to be run
     [HashTable[]]$LinterDefinition = $linterDefinition | Where-Object {
         if (-not $PSItem.filesToLint) {
@@ -18,7 +17,7 @@ function Invoke-Linter {
             $true
         }
     }
-    function Clone-Object ($InputObject) {
+    function Copy-Object ($InputObject) {
         <#
         .SYNOPSIS
         Use the serializer to create an independent copy of an object, useful when using an object as a template
@@ -36,14 +35,14 @@ function Invoke-Linter {
         } else {
             foreach ($linterFilePath in $linter.filesToLint) {
                 Write-Verbose "$($linter.name): Creating runner for $linterfilePath..."
-                $newLinter = Clone-Object $linter
+                $newLinter = Copy-Object $linter
                 $newLinter.filesToLint = $linterFilePath
                 Write-Output $newLinter
             }
         }
     }
 
-    $LinterDefinition | ForEach-Object -ThrottleLimit $ThrottleLimit -Parallel {
+    $LinterResults = $LinterDefinition | ForEach-Object -ThrottleLimit $ThrottleLimit -Parallel {
         $linter = $PSItem
         $icons = @{
             success = "`u{2705}"
@@ -66,4 +65,5 @@ function Invoke-Linter {
         #Return the formatted linter result
         Write-Output $linter
     }
+    return $LinterResults
 }
