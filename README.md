@@ -1,4 +1,4 @@
-# Super-Duper-Linter
+![Super Duper Linter](https://repository-images.githubusercontent.com/273591146/90b83f80-b3e8-11ea-9b88-9608d0b23aa1)
 Inspired by github/super-linter, but using Powershell.
 
 # Improvements
