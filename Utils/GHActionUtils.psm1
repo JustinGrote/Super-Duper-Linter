@@ -19,6 +19,18 @@ function Pop-GHAGroup {
     Remove-Variable -Scope Script -Name GHACurrentGroup
 }
 
+$Script:GHAGroupNumber = 0
+function Get-GHAGroup {
+    [CmdletBinding()]
+    param(
+        [String]$Name = $($GHAGroupNumber++;"Group$GHAGroupNumber"),
+        [Scriptblock]$ScriptBlock
+    )
+    "##[group]$Name"
+    . $ScriptBlock
+    "##[endgroup]$Name"
+}
+
 
 function Get-GHAAnsi ($Name) {
     $ansiCollection = [ordered]@{}
