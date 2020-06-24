@@ -12,5 +12,4 @@ jobs:
         uses: ./Tests/act
         with:
           path: Tests/Mocks/codeToLint
-          linter: bash
         continue-on-error: true
