@@ -6,7 +6,7 @@ param (
     #Path to the file(s) or directories to lint. Wildcards are supported
     [String[]]$Path = (Get-Content -ErrorAction 'SilentlyContinue' -Path ENV:INPUT_PATH || '.'),
     #Explicit file paths to exclude, relative to your root directory. Wildcards are *not* supported
-    [String[]]$ExcludePath = $ENV:INPUT_INCLUDE -split '[ ;,\n]',
+    [String[]]$ExcludePath = $ENV:INPUT_EXCLUDEPATH -split '[ ;,\n]',
     #Files patterns to include. Wildcards are supported.
     [String[]]$Include = $ENV:INPUT_INCLUDE -split '[ ;,\n]',
     #Files patterns to exclude. Wildcards are supported.
@@ -18,38 +18,34 @@ param (
     #Name(s) of the linters you wish to run. Runs all by default
     [String[]]$Name = $ENV:INPUT_LINTER -split '[ ;,\n]'
 )
-Import-Module $PSScriptRoot/Utils/GHActionUtils.psm1
+Import-Module $PSScriptRoot/Utils/GHActionUtils.psm1 -Force
 Import-Module $PSScriptRoot/SuperDuperLinter/SuperDuperLinter.psm1 -Force
 
 GHAGroup 'Environment Information' {
     Get-ChildItem env: | Foreach-Object {$_.name + '=' + $_.value}
 }
 
+
 GHAGroup 'Startup' {
-
     Push-Location -StackName basePath $basePath
-    $candidatePaths = $Path.Foreach{
-        Join-Path -Path $BasePath -ChildPath $PSItem -Resolve -ErrorAction stop
-    }
-    $excludePath = $ExcludePath.Foreach{
-        Join-Path -Path $BasePath -ChildPath $PSItem -Resolve -ErrorAction stop
-    }
-    
-    #Apply filters
-    $candidatePaths = Get-Childitem -File -Recurse -Path $candidatePaths -Include $Include -Exclude $Exclude
 
-    function Write-GHADebug {
-        [CmdletBinding()]
-        param(
-            [Parameter(ValueFromPipeline)][String]$Message
-        )
-        process {
-            $Message.split([Environment]::newline).foreach{
-                "::debug::$PSItem"
-            }
-        }
+    # $candidatePaths = $Path.Foreach{
+    #     Join-Path -Path $BasePath -ChildPath $PSItem -Resolve -ErrorAction stop
+    # }
+    # $excludePath = $ExcludePath.Foreach{
+    #     Join-Path -Path $BasePath -ChildPath $PSItem -Resolve -ErrorAction stop
+    # }
+
+    #Apply file filters
+    [String[]]$candidatePaths = Get-ChildItem -File -Recurse -Path $Path -Include $Include -Exclude $Exclude
+    | Resolve-Path -Relative
+    | Where-Object {
+        $PSItem -notin $ExcludePath
     }
-    New-Alias Write-Debug Write-GHADebug
+    | Foreach-Object {
+        #Trim the leading "./" from the paths
+        $PSItem.TrimStart("./\")
+    }
 }
 
 GHAGroup 'Import Linter Definition and Identify Files To Lint' {
@@ -58,14 +54,12 @@ GHAGroup 'Import Linter Definition and Identify Files To Lint' {
     if ($Name) {
         $linters = $linters | Where-Object name -in $Name
     }
-
+    
     $linters = $linters | Add-LinterFiles -Path $candidatePaths
 }
 
 GHAGroup 'Files to Lint' {
-    Push-Location $BasePath 
-    $linters.filesToLint | Sort-Object -Unique | Get-GHRelativePath
-    Pop-Location
+    $linters.filesToLint | Sort-Object -Unique
 }
 
 

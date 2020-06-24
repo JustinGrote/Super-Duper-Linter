@@ -1,5 +1,19 @@
 #A collection of functions to make formatting Github Action Output Easier
 
+
+
+$Script:GHAGroupNumber = 0
+function Get-GHAGroup {
+    [CmdletBinding()]
+    param(
+        [String]$Name = $($GHAGroupNumber++;"Group$GHAGroupNumber"),
+        [Scriptblock]$ScriptBlock
+    )
+    "##[group]$Name"
+    . $ScriptBlock
+    "##[endgroup]$Name"
+}
+
 function Push-GHAGroup ($GroupName) {
     if ($SCRIPT:GHACurrentGroup) {
         Write-Error -Category NotImplemented -Message "Nested Github Action Output Groups are currently not supported and you already specified Push-GHAGroup. Run Pop-GHAGroup first before specifying a new group."
@@ -17,18 +31,6 @@ function Pop-GHAGroup {
     }
     "##[endgroup]$($SCRIPT:GHACurrentGroup)"
     Remove-Variable -Scope Script -Name GHACurrentGroup
-}
-
-$Script:GHAGroupNumber = 0
-function Get-GHAGroup {
-    [CmdletBinding()]
-    param(
-        [String]$Name = $($GHAGroupNumber++;"Group$GHAGroupNumber"),
-        [Scriptblock]$ScriptBlock
-    )
-    "##[group]$Name"
-    . $ScriptBlock
-    "##[endgroup]$Name"
 }
 
 
@@ -69,5 +71,33 @@ function Get-GHAAnsi ($Name) {
         return $ansiCollection
     }
 }
+function Write-GHADebug {
+    [CmdletBinding()]
+    param(
+        [Parameter(ValueFromPipeline)][String]$Message
+    )
+    process {
+        $Message.split([Environment]::NewLine).foreach{
+            Write-Host "::debug::$PSItem"
+        }
+    }
+}
+function Write-GHAVerbose{
+    [CmdletBinding()]
+    param(
+        [Parameter(ValueFromPipeline)][String]$Message
+    )
+    process {
+        $Message.split([Environment]::NewLine).foreach{
+            Write-Host "::verbose::$PSItem"
+        }
+    }
+}
+if ($env:GITHUB_ACTIONS) {
+    New-Alias Write-Debug Write-GHADebug
+    New-Alias Write-Verbose Write-GHAVerbose
+}
+
 
 Export-ModuleMember -Function *
+Export-ModuleMember -Alias *
