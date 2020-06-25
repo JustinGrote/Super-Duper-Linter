@@ -78,7 +78,13 @@ function Write-GHADebug {
     )
     process {
         $Message.split([Environment]::NewLine).foreach{
-            Write-Host "::debug::$PSItem"
+            # Write-Host "::debug::$PSItem"
+            Write-Host (
+                (Get-GHAAnsi 'Magenta') +
+                "DEBUG: " +
+                $PSItem + 
+                (Get-GHAAnsi 'Reset')
+            )
         }
     }
 }
@@ -89,15 +95,74 @@ function Write-GHAVerbose{
     )
     process {
         $Message.split([Environment]::NewLine).foreach{
-            Write-Host "::verbose::$PSItem"
+            #Write-Host "::verbose::$PSItem"
+            Write-Host (
+                (Get-GHAAnsi 'Cyan') +
+                "VERBOSE: " +
+                $PSItem + 
+                (Get-GHAAnsi 'Reset')
+            )
         }
     }
 }
-if ($env:GITHUB_ACTIONS) {
-    New-Alias Write-Debug Write-GHADebug
-    New-Alias Write-Verbose Write-GHAVerbose
+
+
+$SCRIPT:ProblemMatcherCache = @{}
+function Enable-ProblemMatcher ([String]$matcherFilePath) {
+    $matcherTempPath = "$ENV:HOME/$(New-Guid).json"
+    Copy-Item -Path $matcherFilePath -Destination $matcherTempPath
+    Write-Host "::add-matcher::$matcherTempPath"
+    $loadedMatchers = (Get-Content -Raw $matcherTempPath | ConvertFrom-Json).problemmatcher.owner
+    #For retrieving later when disabling
+    $ProblemMatcherCache.$MatcherFilePath = $loadedMatchers
+    $SCRIPT:lastMatcherFilePath = $matcherFilePath
+}
+function Disable-ProblemMatcher ([String]$matcherFilePath = $SCRIPT:lastMatcherFilePath) {
+    write-host -fore Magenta $($ProblemMatcher)
+    if (-not $SCRIPT:ProblemMatcherCache.$matcherFilePath) {
+        throw "Did not find a matching file to $matcherFilePath in the cache. Did you run Enable-ProblemMatcher first?"
+    }
+    $SCRIPT:ProblemMatcherCache.$MatcherFilePath.foreach{
+        Write-Host "::remove-matcher owner=$PSItem::"
+    }
 }
 
+#DSL Language Construct
+function Get-ProblemMatcher ([String]$matcherFilePath, [ScriptBlock]$ScriptBlock) {
+    Enable-ProblemMatcher $matcherFilePath
+    try {
+        . $ScriptBlock
+    } catch {
+        throw $PSItem
+    } finally {
+        Disable-ProblemMatcher $matcherFilePath
+    }
+}
+
+function Enable-GHADebug {
+    #Scope 2 means "above function then module scope" meaning whatever scope imported the module. Better than using global since it gets cleaned up
+    Set-Alias -scope 2 -Name Write-Debug -Value Write-GHADebug
+}
+
+function Enable-GHAVerbose {
+    #Scope 2 means "above function then module scope" meaning whatever scope imported the module. Better than using global since it gets cleaned up
+    Set-Alias -scope 2 -Name Write-Verbose -Value Write-GHAVerbose
+}
+
+function Set-GHAOutput {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory,ValueFromPipeline)]$InputObject,
+        [Parameter(Mandatory)][String]$Name,
+        $Depth = 5
+    )
+    process {
+        if ($InputObject -isnot [String]) {
+            $InputObject = $InputObject | ConvertTo-Json -Compress -Depth $Depth -EnumsAsStrings
+        }
+        
+        Write-Host "::set-output name=$name::$InputObject"
+    }
+}
 
 Export-ModuleMember -Function *
-Export-ModuleMember -Alias *
