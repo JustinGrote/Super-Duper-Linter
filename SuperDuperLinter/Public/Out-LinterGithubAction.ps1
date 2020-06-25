@@ -1,3 +1,5 @@
+using namespace System.Collections.Generic
+
 function Out-LinterGithubAction {
     <#
     .SYNOPSIS
@@ -12,39 +14,73 @@ function Out-LinterGithubAction {
         #Path to the github workspace path. This is required due to 
         [String]$GithubWorkspacePath
     )
-    
+    begin {
+        $linters = [List[HashTable]]::new()
+    }
     process {
-        foreach ($linter in $LinterResult) {
-            $statuscolor = if ($linter.status -eq 'success') { 'green' } else { 'red' }
-            Write-Host -NoNewline "=== $($linter.name): "
-            Write-Host -NoNewline -ForegroundColor $statuscolor $linter.status
-            Write-Host " - $($linter.filesToLint)"
-            #Enable problem matcher if present
-            if ($linter.status -ne 'success' -and $linter.problemMatcher) {
-                #Required due to running in container
-                #https://github.com/actions/toolkit/issues/305
-                #TODO: Find out if there is a more appropriate TEMP directory to put this
-                $matcherFilePath = "$ENV:HOME/$($linter.name).json"
-                #FIXME: Resolve from environment variables
-                Copy-Item -Path $Linter.problemMatcher -Destination $matcherFilePath
-                Write-Output "::add-matcher::$ENV:HOME/$(Split-Path -Leaf $matcherFilePath)"
-            }
+        $LinterResult.foreach{
+            [void]$linters.Add($PSItem)
+        }
+        $ansi = Get-GHAAnsi
+    }
+    end {
+        $groupedLinters = $linters | Group-Object Name -AsHashTable
+        
+        $sortedLinterNames = $groupedLinters.keys | Sort-Object -unique
 
-            try {
+        foreach ($linterName in $sortedLinterNames) {
+            [int]$indentCount = 3
+            [string]$indent = ' '*3
+            $linterGroup = $groupedLinters[$linterName]
+            $failedSymbol = "`u{274C}"
+            $successSymbol = "`u{2705}"
+            #If any test failed, set the aggregate of the linter to failed
+            $statusicon = ($linterGroup.status -notmatch 'success') ? $failedSymbol : $successSymbol
+            GHAGroup ("[$statusicon] " + $linterName) {
+                foreach ($linter in $linterGroup) {
+                    $statusicon = ($linter.status -ne 'success') ? $failedSymbol : $successSymbol
+                    #Enable problem matcher if present
+                    
+                    #Get the longest line and use that as the width for the header
+                    $linterHasMultipleFiles = @($linter.filesToLint).count -gt 1
+
+                    if ($linterHasMultipleFiles) {
+                        $headerwidth = ($linter.filesToLint.foreach{$_.length} | Measure-Object -Maximum).maximum
+
+                        Write-Host ($ansi.Yellow + '='*$headerwidth)
+                        Write-Host ($ansi.yellow + "$indent$statusicon File Group")
+                    } else {
+                        Write-Host -NoNewLine "$indent${statusicon} "
+                    }
+
+                    $linter.filesToLint.foreach{
+                        Write-Host $PSItem
+                    }
+                    
+                    if ($linterHasMultipleFiles) {
+                        Write-Host ($ansi.yellow + ('='*$headerwidth) + $ansi.reset)
+                    }
+
+                    #Output the appropriate lintes with the appropriate file matcher
+                    if ($linter.status -ne 'success' -and $linter.problemMatcher) {
+                        Enable-ProblemMatcher $Linter.problemMatcher -Destination $matcherFilePath
+                    }
+                    try {
+                        $linterOutput = $linter.name -eq 'powershell' ? (
+                            $linter.result | Format-Table -prop ScriptName,RuleName,Severity,Message | Out-String
+                        ):(
+                            $linter.result | Format-List | Out-String
+                        )
+                        Write-Host $linterOutput
+                    } catch {
+                        Write-Error $PSItem
+                    } finally {
+                        if ($linter.status -ne 'success' -and $linter.problemMatcher) {
+                            Disable-ProblemMatcher
+                        }
+                    }
+                }
                 
-                if ($linter.name -eq 'powershell') {
-                    Write-Host -Fore Cyan ($linter.result | Format-Table -prop ScriptName,RuleName,Severity,Message | Out-String)
-                } else {
-                    Write-Host -Fore Cyan ($linter.result | Format-List | Out-String)
-                }
-            } catch {
-                Write-Error $linter
-            } finally {
-                if ($linter.problemMatcher) {
-                    $problemMatcherName = (Get-Content -Raw $linter.problemMatcher 
-                    | ConvertFrom-Json).problemmatcher.owner
-                    Write-Output "::remove-matcher owner=$problemMatcherName::"
-                }
             }
         }
     }

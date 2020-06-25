@@ -21,3 +21,5 @@ jobs:
         continue-on-error: true
         with:
           path: "Tests/Mocks/codeToLint/test"
+          parallel: 8
+          problemsonly: true

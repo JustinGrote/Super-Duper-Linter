@@ -1,18 +1,33 @@
 name: 'Super Duper Linter Test'
 description: 'Lints and validates code files in your repository, very helpful for Pull Requests!'
 inputs:
-  name:
+  linter:
     description: Name(s) of the linters you wish to run. Runs all by default
     required: false
   path:
-    description: Name(s) of the linters you wish to run. Runs all by default
+    description: Specify a relative path of your repository to lint. Only files in this path will be processed
+    required: false
+  excludepath:
+    description: Explicit file paths to exclude, relative to your root directory. Wildcards are *not* supported
+    required: false
+  include:
+    description: Files patterns to include. Wildcards are supported.
+    required: false
+  exclude:
+    description: Files patterns to exclude. Wildcards are supported.
     required: false
   debug:
     description: Set to True to enable advanced Powershell-level debugging
     required: false
-# outputs:
-#   time: # id of output
-#     description: 'The time we greeted you'
+  problemsOnly:
+    description: Set to True to only display problems in the test result output
+    required: false
+  parallel:
+    description: Set to the number of linters to run concurrently. By default this is set to the number of logical cores in your system plus 1
+    required: false
+outputs:
+  result: 
+    description: 'A JSON representation of the linter results'
 runs:
   using: 'docker'
   #This is generated in the Github Action Workflow by the docker-build-with-cache-action@v5 action that should be called prior to this one. Its name is hard-coded for now

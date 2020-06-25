@@ -12,4 +12,10 @@ jobs:
         uses: ./Tests/act
         with:
           path: Tests/Mocks/codeToLint
+          excludePath: 
+          linter: markdown
+          include: 
+          debug: true
+          parallel: 8
+          problemsonly: true
         continue-on-error: true

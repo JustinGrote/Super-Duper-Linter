@@ -9,6 +9,6 @@ Describe 'EntryPoint' -Tag Integration {
         $pwshlinter = $linters | where name -eq 'powershell'
         $pwshlinter.name | Should -be 'powershell'
         $pwshlinter.result[0] | Should -BeOfType [Microsoft.Windows.PowerShell.ScriptAnalyzer.Generic.DiagnosticRecord]
-        $pwshlinter.status | Should -be 'failure'
+        $pwshlinter.status | Should -be 'error'
     }
 }

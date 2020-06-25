@@ -7,9 +7,27 @@ inputs:
   path:
     description: Specify a relative path of your repository to lint. Only files in this path will be processed
     required: false
+  excludepath:
+    description: Explicit file paths to exclude, relative to your root directory. Wildcards are *not* supported
+    required: false
+  include:
+    description: Files patterns to include. Wildcards are supported.
+    required: false
+  exclude:
+    description: Files patterns to exclude. Wildcards are supported.
+    required: false
   debug:
     description: Set to True to enable advanced Powershell-level debugging
     required: false
+  problemsOnly:
+    description: Set to True to only display problems in the test result output
+    required: false
+  parallel:
+    description: Set to the number of linters to run concurrently. By default this is set to the number of logical cores in your system plus 1
+    required: false
+outputs:
+  result: 
+    description: 'A JSON representation of the linter results'
 runs:
   using: 'docker'
   image: '../../Dockerfile'

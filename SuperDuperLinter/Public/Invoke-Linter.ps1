@@ -11,11 +11,11 @@ function Invoke-Linter {
 
     #Filter out linters that don't need to be run
     [HashTable[]]$LinterDefinition = $linterDefinition | Where-Object {
-        if (-not $PSItem.filesToLint) {
+        (-not $PSItem.filesToLint) ? (
             Write-Verbose "$($PSItem.name): No files matched. Skipping..."
-        } else {
+        ):(
             $true
-        }
+        )
     }
     function Copy-Object ($InputObject) {
         <#
@@ -46,7 +46,7 @@ function Invoke-Linter {
         $linter = $PSItem
         $icons = @{
             success = "`u{2705}"
-            failure = "`u{274C}"
+            error = "`u{274C}"
         }
 
         $linterArgs = $linter.args
@@ -54,12 +54,15 @@ function Invoke-Linter {
         $linterExitCode = $LASTEXITCODE
         $linter.filesToLint.foreach{
             if ($linterExitCode -ne 0) {
-                $linter.status = 'failure'
-                #Write-Verbose "$($linter.name) exited with status - $linterExitCode"
+                $linter.status = 'error'
             } else {
                 $linter.status = 'success'
             }
-            Write-Host "[$($icons[$linter.status])] $PSItem - $($linter.name)"
+            $resultMessage = "[$($icons[$linter.status])] $PSItem - $($linter.name)"
+            if ($EnableDebug) {
+                $resultMessage + " - Exited $linterExitCode"
+            }
+            Write-Host $resultMessage
         }
         #Return the formatted linter result
         Write-Output $linter
