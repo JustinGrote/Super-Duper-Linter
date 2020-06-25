@@ -7,6 +7,6 @@
     "powershell.powerShellDefaultVersion": "Powershell",
     "files.eol": "\n",
     "vsicons.associations.folders": [
-        { "icon": "template", "extensions": ["linters"], "format": "svg", "extends": "js" }
+        { "icon": "template", "extensions": ["linters"], "format": "svg" }
     ]
 }
