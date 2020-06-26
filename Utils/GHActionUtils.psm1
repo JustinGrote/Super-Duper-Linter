@@ -165,4 +165,48 @@ function Set-GHAOutput {
     }
 }
 
+function Get-GHAFileChanges {
+    param (
+        $Path = '/github/workspace',
+        $TargetCommit = $ENV:GITHUB_BASE_REF,
+        [ValidateNotNullOrEmpty()]$SourceCommit = $ENV:GITHUB_SHA
+    )
+    try {
+        $GitRootPath = git rev-parse --show-toplevel || Write-Error "Github Pull Request Environment Variables were detected but $Path is not a valid git repository."
+        Push-Location -StackName GetGHAFileChanges $GitRootPath
+
+        #Detect the parent branch
+        if (-not $TargetCommit) {
+            #We need to fetch all branches to detect the common ancestor
+            $fetchResult = git fetch origin || Write-Error "Unable to fetch from origin. Please file an issue."
+            $TargetCommit = Get-GHAParentBranch
+        } else {
+            $fetchResult = git fetch origin -- $TargetCommit $SourceCommit
+        }
+        $diffTarget = $TargetCommit ? "origin/$TargetCommit" : $null
+        $diffPaths = git diff --diff-filter=d --name-only $diffTarget $SourceCommit || Write-Error "Unable to determine changed files in $Path. Please file an issue on this."
+
+        Write-Output $diffPaths
+    } catch {throw $PSItem} finally {
+        Pop-Location -StackName GetGHAFileChanges
+    }
+}
+
+function Get-GHAParentBranch {
+    [CmdletBinding()]
+    param(
+        $Name = (git branch --show-current)
+    )
+    Write-Debug "Git Show branch"
+    $gitShowBranchResult = git show-branch -a
+    $gitShowBranchResult | Write-Debug
+    
+    #Get the name of the parent branch
+    $gitShowBranchResult
+    | Select-String '^[^\[]*\*'
+    | Select-String -NotMatch -Pattern "\[$([Regex]::Escape($Name)).*?\]"
+    | Select-Object -First 1
+    | Foreach-Object {$PSItem -replace '^.+?\[(.+)\].+$','$1'}
+}
+
 Export-ModuleMember -Function *

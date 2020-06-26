@@ -11,11 +11,6 @@ jobs:
       - name: Super Duper Linter Test
         uses: ./Tests/act
         with:
-          path: Tests/Mocks/codeToLint
-          excludePath: 
-          linter: markdown
-          include: 
+          path: Tests/Mocks/codeToLint/test
           debug: true
-          parallel: 8
-          problemsonly: true
         continue-on-error: true

@@ -1,6 +1,8 @@
-name: SuperDuperLinter Linter Test
+name: SuperDuperLinter PR Validation
 on:
-  push:
+  pull_request:
+    branches:
+      - main
 jobs:
   SuperDuperLinterTest:
     runs-on: ubuntu-latest
@@ -15,7 +17,5 @@ jobs:
           push_image_and_stages: false # Set this to true once when changing the dockerfile to cache the new layers
       - name: Super Duper Linter - Test Dockerfile
         uses: ./Tests
-        continue-on-error: true
         with:
-          path: "Tests/Mocks/codeToLint/test"
           debug: true

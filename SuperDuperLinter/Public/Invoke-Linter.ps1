@@ -34,7 +34,7 @@ function Invoke-Linter {
             Write-Output $linter
         } else {
             foreach ($linterFilePath in $linter.filesToLint) {
-                Write-Verbose "$($linter.name): Creating runner for $linterfilePath..."
+                Write-Verbose "`u{1F680} $linterfilePath - $($linter.command)"
                 $newLinter = Copy-Object $linter
                 $newLinter.filesToLint = $linterFilePath
                 Write-Output $newLinter

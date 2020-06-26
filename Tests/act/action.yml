@@ -25,6 +25,9 @@ inputs:
   parallel:
     description: Set to the number of linters to run concurrently. By default this is set to the number of logical cores in your system plus 1
     required: false
+  all:
+    description: Set to True to evaluate all files in the repository, not just those that have changed since the last PR
+    required: false
 outputs:
   result: 
     description: 'A JSON representation of the linter results'
