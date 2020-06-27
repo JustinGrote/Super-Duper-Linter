@@ -1,4 +1,4 @@
-
+using namespace System.Collections.Generic
 function Import-LinterDefinition {
     [CmdletBinding()]
     param (
@@ -9,6 +9,9 @@ function Import-LinterDefinition {
     $linterDefinitionFiles = foreach ($FileItem in $LinterDefinitionFileName) {
         Get-ChildItem -Recurse -Path $LinterDefinitionPath -Filter $FileItem
     }
+
+    #This can be used like a normal hashtable but it automatically sorts the keys alphabetically
+    $linters = [SortedDictionary[String, Hashtable]]::new()
 
     foreach ($linterDefinitionFileItem in $linterDefinitionFiles) {
         Write-Verbose "Importing linter definition from $linterDefinitionFileItem"
@@ -40,6 +43,15 @@ function Import-LinterDefinition {
         }
 
         $linter.path = $linterDefinitionFileItem
+        
+        #Check for a local repository config and use that overriding config if present
+        if ($linter.config) {
+            $linterConfigName = Split-Path $linter.config -Leaf
+            if (Test-Path $linterConfigName) {
+                $linter.config = Resolve-Path $linterConfigName
+                Write-Host "$($linter.name) - Using config $($linterConfigName) found in local repository rather than the default"
+            }
+        }
 
         #Resolve any variables that may be present
         $varMatchRegex = '\${{ ?(\w+) ?}}'
@@ -56,7 +68,8 @@ function Import-LinterDefinition {
             }
         }
 
-        #FIXME: Resolve paths for the container
-        Write-Output $linter
+        #If a linter already exists it will be overwritten
+        $linters[$linter.name] = $linter
     }
+    return $linters
 }

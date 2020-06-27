@@ -4,19 +4,19 @@ using namespace System.IO
 function Invoke-Linter {
     param (
         #Linter Definitions to run. These must have filesToMatch already populated
-        [Parameter(Mandatory)][Hashtable[]]$LinterDefinition,
+        [Parameter(Mandatory)][Collections.Generic.SortedDictionary[String, Hashtable]]$LinterDefinition,
         #How many different linters to run simultaneously
         [Int]$ThrottleLimit = 5
     )
 
     #Filter out linters that don't need to be run
-    [HashTable[]]$LinterDefinition = $linterDefinition | Where-Object {
-        (-not $PSItem.filesToLint) ? (
+    $linterDefinition.values.foreach{
+        if (-not $PSItem.filesToLint) {
             Write-Verbose "$($PSItem.name): No files matched. Skipping..."
-        ):(
-            $true
-        )
+            $LinterDefinition.Remove($LinterDefinition.Name)
+        }
     }
+
     function Copy-Object ($InputObject) {
         <#
         .SYNOPSIS
@@ -29,7 +29,8 @@ function Invoke-Linter {
         )
     }
     #Break out linters into individual files for those that need it (assume by default)
-    [HashTable[]]$LinterDefinition = Foreach ($linter in $LinterDefinition) {
+
+    [HashTable[]]$LinterRunners = foreach ($linter in $LinterDefinition.values) {
         if ($linter.filemode -eq 'multiple' -or $linter.filestolint.count -eq 1) {
             Write-Output $linter
         } else {
@@ -42,7 +43,7 @@ function Invoke-Linter {
         }
     }
 
-    $LinterResults = $LinterDefinition | ForEach-Object -ThrottleLimit $ThrottleLimit -Parallel {
+    $LinterResults = $LinterRunners | ForEach-Object -ThrottleLimit $ThrottleLimit -Parallel {
         $linter = $PSItem
         $icons = @{
             success = "`u{2705}"

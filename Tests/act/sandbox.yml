@@ -12,5 +12,7 @@ jobs:
         uses: ./Tests/act
         with:
           path: Tests/Mocks/codeToLint/test
+          linter: bash terraform
           debug: true
-        continue-on-error: true
+          all: true
+          customLinterPath: Tests/Mocks/customLinter

@@ -6,6 +6,8 @@ param (
     [ValidateNotNullOrEmpty()][String]$BasePath = $ENV:GITHUB_WORKSPACE ? $ENV:GITHUB_WORKSPACE : '/github/workspace',
     #Path to the file(s) or directories to lint. Wildcards are supported
     [String[]]$Path = $ENV:INPUT_PATH ? $ENV:INPUT_PATH : '.',
+    #Path to custom linter
+    [String[]]$CustomLinterPath = $ENV:INPUT_CUSTOMLINTERPATH ? $ENV:INPUT_CUSTOMLINTERPATH : 'linters',
     #Explicit file paths to exclude, relative to your root directory. Wildcards are *not* supported
     [String[]]$ExcludePath = $ENV:INPUT_EXCLUDEPATH -split '[ ;,\n]',
     #Files patterns to include. Wildcards are supported.
@@ -47,12 +49,13 @@ GHAGroup 'Startup' {
     Push-Location -StackName basePath $basePath
     
     #Determine which files to process
-    
     if (-not $All) {
         if ($Path -ne '.') {
             $PathFilter = $Path
         }
         $Path = Get-GHAFileChanges
+    } else {
+        Write-Verbose "Linting all files because 'ALL' was set to true"
     }
 
     Write-Debug "Pre-Evaluation Paths"
@@ -61,6 +64,7 @@ GHAGroup 'Startup' {
     Write-Debug "==================="
 
     #Apply file filters
+    Write-Debug "Scanning for files to lint"
     [String[]]$candidatePaths = Get-ChildItem -File -Recurse -Path $Path -Include $Include -Exclude $Exclude
     | Resolve-Path -Relative
     | Foreach-Object {
@@ -81,6 +85,7 @@ GHAGroup 'Startup' {
             $pathMatchTest -contains $true ? $true : (Write-Debug "$PSItem EXCLUDED by PathFilter")
         } else {$true}
     }
+    Write-Debug "File scan lint completed"
 
     Write-Host "Startup OK!"
 }
@@ -91,23 +96,41 @@ if (-not $candidatePaths) {
 }
 
 GHAGroup 'Import Linter Definition and Identify Files To Lint' {
+    $CustomLinterPath.Foreach{
+        if (Test-Path (join-path $PSItem "/*/$LinterDefinitionFileName")) {
+            Write-Host "${PSItem}: Custom Linters Detected, these will override the builtin linters"
+            $LinterDefinitionPath += $PSItem
+        } else {
+            Write-Verbose "No Custom Linter found at $PSItem, skipping..."
+        }
+    }
+    
     $linters = Import-LinterDefinition $LinterDefinitionPath $LinterDefinitionFileName
 
     if ($Name) {
-        $linters = $linters | Where-Object name -in $Name
+        $lintersToExclude = foreach ($linter in $linters.values) {
+            if ($linter.name -notin $Name) {
+                Write-Output $linter.name
+            }
+        }
+        #Remove the excluded linters
+        $lintersToExclude.foreach{
+            [void]$linters.Remove($PSItem)
+        }
     }
     
-    $linters = $linters | Add-LinterFiles -Path $candidatePaths
+    Add-LinterFiles -LinterDefinition $linters -Path $candidatePaths
+
     Write-Host "Successfully imported $($linters.count) linters"
 }
 
-if (-not $linters.filesToLint) {
+if (-not $linters.values.filesToLint) {
     Write-Host "No linters were found for the $(@($candidatePaths).count) files in scope. Exiting..."
     exit 0
 }
 
 GHAGroup 'Files to Lint' {
-    $linters.filesToLint | Sort-Object -Unique
+    $linters.values.filesToLint | Sort-Object -Unique
 }
 
 GHAGroup 'Run Linters' {

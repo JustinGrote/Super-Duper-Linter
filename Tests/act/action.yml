@@ -4,6 +4,9 @@ inputs:
   linter:
     description: Name(s) of the linters you wish to run. Runs all by default
     required: false
+  customLinterPath:
+    description: Specify a relative path within your repository that contains the custom linters. Defaults to "linters". These definitions will OVERRIDE (not merge) definitions of the same name.
+    required: false
   path:
     description: Specify a relative path of your repository to lint. Only files in this path will be processed
     required: false

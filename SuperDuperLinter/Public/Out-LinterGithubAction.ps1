@@ -25,7 +25,7 @@ function Out-LinterGithubAction {
     }
     end {
         $groupedLinters = $linters | Group-Object Name -AsHashTable
-        
+        #TODO: REFACTOR use .values and then sort by name then this more convoluted method
         $sortedLinterNames = $groupedLinters.keys | Sort-Object -unique
 
         foreach ($linterName in $sortedLinterNames) {
