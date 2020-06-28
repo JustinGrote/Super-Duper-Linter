@@ -9,9 +9,10 @@
     "problemMatcher": [
         {
             "owner": "markdownlint",
+            "severity": "Error",
             "pattern": [
                 {
-                    "regexp": "^(\/[^:]+\/)(.+?):(\\d+):?(\\d+)? (\\w+)\/(.+?)(?: \\[Context: \"(.+)\"\\])?$",
+                    "regexp": "^(\/?[^:]+\/)(.+?):(\\d+):?(\\d+)? (\\w+)\/(.+?)(?: \\[Context: \"(.+)\"\\])?$",
                     "fromPath":1,
                     "file": 2,
                     "line": 3,

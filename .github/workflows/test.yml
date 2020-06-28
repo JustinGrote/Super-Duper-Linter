@@ -13,9 +13,17 @@ jobs:
           image_name: superduperlinter
           image_tag: cicache
           push_image_and_stages: false # Set this to true once when changing the dockerfile to cache the new layers
+      - name: Verify Linter Definitions
+        uses: ./Tests
+        continue-on-error: false
+        with:
+          test: true
+          debug: true
+          verbose: true
+          customLinterPath: 'Disabled'
       - name: Super Duper Linter - Test Dockerfile
         uses: ./Tests
         continue-on-error: true
         with:
-          path: "Tests/Mocks/codeToLint/test"
-          debug: true
+          all: true
+          customLinterPath: 'Disabled'

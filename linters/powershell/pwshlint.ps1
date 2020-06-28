@@ -6,5 +6,6 @@ param(
 $scriptAnalyzerResults = $FileToAnalyze.foreach{
     Invoke-ScriptAnalyzer -Settings $SettingsPath -Path $PSItem
 }
-$scriptAnalyzerResults
-exit ($scriptAnalyzerResults | where Severity -eq 'Error').count
+Write-Output $scriptAnalyzerResults
+
+exit ($scriptAnalyzerResults | Where-Object Severity -eq 'Error').count

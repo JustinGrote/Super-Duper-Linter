@@ -5,6 +5,7 @@ filematch: '\.tf$'
 #The base command for the linter, either an absolute path or an executable that's available in the $PATH
 command: tflint
 config: .tflint.hcl
+matchmethod: stderr
 #Command line arguments to pass to the linter. Variables are accepted in Github actions-style ${{ VARNAME }} format
 #PATH: One or more paths that will be passed to the command.
 #CONFIG: Will be substituted with either the default or user-supplied linter configuration
@@ -12,3 +13,4 @@ config: .tflint.hcl
 args:
 - '-c'
 - '${{ CONFIG }}'
+#TODO: Add file overrides because they can't be in the same folder

@@ -12,6 +12,6 @@ config: .python-lint
 #TODO: Support multiple path styles (commas, stdin, etc.)
 
 args: 
-- '-rcfile'
+- '--rcfile'
 - '${{ CONFIG }}'
 - '-E'

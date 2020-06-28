@@ -47,26 +47,36 @@ function Invoke-Linter {
         $linter = $PSItem
         $icons = @{
             success = "`u{2705}"
-            error = "`u{274C}"
+            failure = "`u{274C}"
         }
 
         $linterArgs = $linter.args
-        $linter.result = & $linter.command @linterArgs $linter.filesToLint *>&1
-        $linterExitCode = $LASTEXITCODE
+        $linterErrTempFile = [io.path]::GetTempFileName()
+        $linterOut = & $linter.command @linterArgs $linter.filesToLint 2>$linterErrTempFile
+        #Workaround because you can't direct stderr directly to a variable
+        $linterErr = Get-Content -Raw $linterErrTempFile
+        Remove-Item $linterErrTempFile
+
+        $linter.exitcode = $LASTEXITCODE
+        $statusIcon = ($linter.exitcode -eq 0) ? $icons['success'] : $icons['failure'] 
         $linter.filesToLint.foreach{
-            if ($linterExitCode -ne 0) {
-                $linter.status = 'error'
-            } else {
-                $linter.status = 'success'
-            }
-            $resultMessage = "[$($icons[$linter.status])] $PSItem - $($linter.name)"
+            $resultMessage = "[$statusIcon] $PSItem - $($linter.name)"
             if ($EnableDebug) {
-                $resultMessage + " - Exited $linterExitCode"
+                $resultMessage + " - Exited $($linter.exitcode)"
             }
             Write-Host $resultMessage
         }
+        $linter.stdout = $linterOut
+        $linter.stderr = $linterErr
         #Return the formatted linter result
         Write-Output $linter
     }
+    Write-Debug "===Linter Result==="
+    Write-Debug (
+        [PSCustomObject[]]$LinterResults
+        | Select-Object name,status,exitcode,stdout,stderr,command,args,filesToLint
+        | Format-List
+        | Out-String
+    )
     return $LinterResults
 }

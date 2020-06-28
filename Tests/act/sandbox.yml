@@ -11,8 +11,7 @@ jobs:
       - name: Super Duper Linter Test
         uses: ./Tests/act
         with:
-          path: Tests/Mocks/codeToLint/test
-          linter: bash terraform
+          verbose: true
           debug: true
-          all: true
-          customLinterPath: Tests/Mocks/customLinter
+          test: true
+          customLinterPath: 'Disabled'

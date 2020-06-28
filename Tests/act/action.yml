@@ -22,6 +22,9 @@ inputs:
   debug:
     description: Set to True to enable advanced Powershell-level debugging
     required: false
+  verbose:
+    description: Set to True to enable advanced Powershell-level verbose logging
+    required: false
   problemsOnly:
     description: Set to True to only display problems in the test result output
     required: false
@@ -30,6 +33,15 @@ inputs:
     required: false
   all:
     description: Set to True to evaluate all files in the repository, not just those that have changed since the last PR
+    required: false
+  test:
+    description: Set to true to validate the linter operation against defined test cases. This is useful if defining a new custom linter.
+    required: false
+  severity:
+    description: Choose what level of issue severity consistutes a failure of the linter and that it should exit with a non-zero exit status. Options are error, warning, and information. Options are inclusive of their previous choices (e.g. setting information also fails on warnings and errors)
+    required: false
+  level:
+    description: Choose what level of issue severity to display. The linter will suppress output of severities below this one. Options are error, warning, and information, default is information
     required: false
 outputs:
   result: 

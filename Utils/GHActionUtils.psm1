@@ -77,7 +77,7 @@ function Write-GHADebug {
         [Parameter(ValueFromPipeline)][String]$Message
     )
     process {
-        $Message.split([Environment]::NewLine).foreach{
+        $Message.split([Environment]::NewLine).where{$PSItem}.foreach{
             # Write-Host "::debug::$PSItem"
             Write-Host (
                 (Get-GHAAnsi 'Magenta') +
@@ -172,7 +172,12 @@ function Get-GHAFileChanges {
         [ValidateNotNullOrEmpty()]$SourceCommit = $ENV:GITHUB_SHA
     )
     try {
-        $GitRootPath = git rev-parse --show-toplevel || Write-Error "Github Pull Request Environment Variables were detected but $Path is not a valid git repository."
+        #Fix a small bug when running inside container in windows
+        if ($ENV:REMOTE_CONTAINERS_IPC) {
+            $GitRootPath = $Path
+        } else {
+            $GitRootPath = git rev-parse --show-toplevel || Write-Error "$Path is not a valid git repository."
+        }
         Push-Location -StackName GetGHAFileChanges $GitRootPath
 
         #Detect the parent branch

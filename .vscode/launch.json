@@ -1,0 +1,17 @@
+{
+
+    "configurations": [
+        {
+            "args": [
+                "${command:SpecifyScriptArgs}"
+            ],
+            "name": "entrypoint",
+            "request": "launch",
+            "script": "/workspaces/Super-Duper-Linter/entrypoint.ps1",
+            "type": "PowerShell",
+            "presentation": {
+                "group": "Powershell"
+            },
+        }
+    ]
+}

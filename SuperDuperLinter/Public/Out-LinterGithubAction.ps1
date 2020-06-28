@@ -1,4 +1,5 @@
 using namespace System.Collections.Generic
+using namespace Microsoft.Windows.PowerShell.ScriptAnalyzer.Generic
 
 function Out-LinterGithubAction {
     <#
@@ -10,77 +11,85 @@ function Out-LinterGithubAction {
     [CmdletBinding()]
     param (
         #Linter Result objects from Invoke-Linter
-        [Parameter(Mandatory,ValueFromPipeline)][Hashtable[]]$LinterResult,
-        #Path to the github workspace path. This is required due to 
-        [String]$GithubWorkspacePath
+        [Parameter(Mandatory,ValueFromPipeline)]$LinterIssue
     )
     begin {
-        $linters = [List[HashTable]]::new()
+        $ansi = Get-GHAAnsi
+        $linters = [List[LinterIssue]]::new()
     }
     process {
-        $LinterResult.foreach{
+        #We collect all the linter results so we can sort them prior to output
+        $LinterIssue.foreach{
             [void]$linters.Add($PSItem)
         }
-        $ansi = Get-GHAAnsi
     }
     end {
-        $groupedLinters = $linters | Group-Object Name -AsHashTable
+        $groupedLinters = $linters | Group-Object LinterName -AsHashTable
         #TODO: REFACTOR use .values and then sort by name then this more convoluted method
-        $sortedLinterNames = $groupedLinters.keys | Sort-Object -unique
+        $sortedLinterNames = $groupedLinters.keys | Sort-Object
 
         foreach ($linterName in $sortedLinterNames) {
             [int]$indentCount = 3
-            [string]$indent = ' '*3
+            [string]$indent = ' '*$indentCount
             $linterGroup = $groupedLinters[$linterName]
-            $failedSymbol = "`u{274C}"
-            $successSymbol = "`u{2705}"
+            $severitySymbol = @{
+                error = "`u{274C}"
+                warning = "`u{26A0}`u{FE0F}"
+                information = "`u{1F4DD}"
+            }
+
             #If any test failed, set the aggregate of the linter to failed
-            $statusicon = ($linterGroup.status -notmatch 'success') ? $failedSymbol : $successSymbol
-            GHAGroup ("[$statusicon] " + $linterName) {
-                foreach ($linter in $linterGroup) {
-                    $statusicon = ($linter.status -ne 'success') ? $failedSymbol : $successSymbol
-                    #Enable problem matcher if present
-                    
-                    #Get the longest line and use that as the width for the header
-                    $linterHasMultipleFiles = @($linter.filesToLint).count -gt 1
-
-                    if ($linterHasMultipleFiles) {
-                        $headerwidth = ($linter.filesToLint.foreach{$_.length} | Measure-Object -Maximum).maximum
-
-                        Write-Host ($ansi.Yellow + '='*$headerwidth)
-                        Write-Host ($ansi.yellow + "$indent$statusicon File Group")
-                    } else {
-                        Write-Host -NoNewLine "$indent${statusicon} "
-                    }
-
-                    $linter.filesToLint.foreach{
-                        Write-Host $PSItem
-                    }
-                    
-                    if ($linterHasMultipleFiles) {
-                        Write-Host ($ansi.yellow + ('='*$headerwidth) + $ansi.reset)
-                    }
-
-                    #Output the appropriate lintes with the appropriate file matcher
-                    if ($linter.status -ne 'success' -and $linter.problemMatcher) {
-                        Enable-ProblemMatcher $Linter.problemMatcher -Destination $matcherFilePath
-                    }
-                    try {
-                        $linterOutput = $linter.name -eq 'powershell' ? (
-                            $linter.result | Format-Table -prop ScriptName,RuleName,Severity,Message | Out-String
-                        ):(
-                            $linter.result | Format-List | Out-String
-                        )
-                        Write-Host $linterOutput
-                    } catch {
-                        Write-Error $PSItem
-                    } finally {
-                        if ($linter.status -ne 'success' -and $linter.problemMatcher) {
-                            Disable-ProblemMatcher
-                        }
+            $loopMatch = $false
+            $groupStatus = ('error','warning','information').foreach{
+                #TODO: Figure out why "break" isn't confined to the inner loop here and exits the full loop
+                if (-not $loopMatch) {
+                    if ($PSItem -in $linterGroup.Severity) {
+                        $PSItem
+                        $loopMatch = $true
                     }
                 }
-                
+            }
+            $groupStatusIcon = $severitySymbol[$groupStatus]
+            GHAGroup ("[$groupStatusIcon] " + $linterName) {
+                #TODO: Make this a custom view
+                #TODO: Make this an enum and a function
+                $sevPriority = @{
+                    error=0
+                    warning=1
+                    information=2
+                }
+                $linterGroup
+                | Sort-Object                     @{
+                    Expression = {
+                        $sevPriority[[String]($PSItem.severity)]
+                    }
+                    Descending = $false
+                },scriptpath
+                | Select-Object @{
+                        N='Sev'
+                        E={
+                            $severitySymbol[[String]$PSItem.severity]
+                        }
+                    },
+                    scriptpath,
+                    line,
+                    column,
+                    @{
+                        N='Code'
+                        E={
+                            $PSItem.RuleName
+                        }
+                    },
+                    message,
+                    @{
+                        N='Priority'
+                        E={
+                            $sevPriority[$PSItem.severity]
+                        }
+                    }
+                | Format-Table -autosize -wrap
+                | Out-String 
+                | Write-Host
             }
         }
     }

@@ -1,0 +1,1 @@
+"This line has trailing whitespace"     

@@ -40,7 +40,6 @@ RUN apk add --no-cache \
     bash git git-lfs musl-dev curl gcc jq file\
     npm nodejs \
     libxml2-utils perl \
-    ruby ruby-dev ruby-bundler ruby-rdoc make \
     py3-setuptools ansible-lint \
     go
 
@@ -92,20 +91,10 @@ RUN npm config set package-lock false \
 #  # I think we could fix this with path but not sure the language...
 #  # https://github.com/nodejs/docker-node/blob/master/docs/BestPractices.md
 
-####################
-# Run GEM installs #
-####################
-FROM super-linter-compatibility-npm AS ruby
-RUN gem install rubocop:0.74.0 rubocop-rails rubocop-github:0.13.0
-
-# Need to fix the version as it installs 'rubocop:0.85.1' as a dep, and forces the default
-# We then need to promot the correct verion, uninstall, and fix deps
-RUN sh -c 'gem install --default rubocop:0.74.0;  yes | gem uninstall rubocop:0.85.1 -a -x -I; gem install rubocop:0.74.0'
-
 ######################
 # Install shellcheck #
 ######################
-FROM ruby AS bash
+FROM super-linter-compatibility-npm AS bash
 RUN wget -qO- "https://github.com/koalaman/shellcheck/releases/download/stable/shellcheck-stable.linux.x86_64.tar.xz" | tar -xJv \
     && mv "shellcheck-stable/shellcheck" /usr/bin/
 

@@ -11,6 +11,33 @@ filemode: multiple
 command: pwshlint.ps1
 #An optional config that the program uses. You must pass this in later.
 config: PSScriptAnalyzerSettings.psd1
+#Specify a match method
+#simple - If the command outputs anything, consider it an error
+#stderr - If the command outputs to stderr, consider it an error. Ignore StdOut
+#problemMatcher - Use a Github Actions-style problem matcher to identify issues. Default filename is matcher.jsonc
+matchMethod: powershell
+
+#Failure Exit Codes. Success is 0, failure is anything but
+exit:
+  failure:
+  success:
+
+    #Tests to validate the linter's functionality
+#If not specified, it will look for [lintername]_[good|info|error|warning]_[number].[filematchextension] in a folder called "tests" in the same folder as the linter
+#Number is used to specify multiple test cases
+#For example:
+#powershell_good_1.ps1 - This test should return good by the powershell linter
+#tslint_warning_1.ps1 - This test should warning good by the tslint linter
+tests:
+  success:
+    - powershell_ok_1.ps1
+    - powershell_ok_2.ps1
+  warning:
+    - powershell_warning_1.ps1
+  info:
+    - powershell_info_1.ps1
+  error:
+    - powershell_error_1.ps1
 
 #Command line arguments to pass to the linter. Variables are accepted in Github actions-style ${{ VARNAME }} format
 #PATH: One or more paths that will be passed to the command.

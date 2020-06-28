@@ -2,7 +2,7 @@
 name: css
 
 #A .NET regular expression that matches the file paths that this linter should process. Multiple are supported if you specify this as an array
-filematch: 'css$' 
+filematch: '\.css$' 
 #The base command for the linter, either an absolute path or an executable that's available in the $PATH
 command: stylelint
 config: .stylelintrc.json

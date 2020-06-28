@@ -1,3 +1,0 @@
-function goodscript {
-    'hello world!'
-}
