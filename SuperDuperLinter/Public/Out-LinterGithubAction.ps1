@@ -11,7 +11,7 @@ function Out-LinterGithubAction {
     [CmdletBinding()]
     param (
         #Linter Result objects from Invoke-Linter
-        [Parameter(Mandatory,ValueFromPipeline)]$LinterIssue
+        [Parameter(ValueFromPipeline)]$LinterIssue
     )
     begin {
         $ansi = Get-GHAAnsi
@@ -24,6 +24,8 @@ function Out-LinterGithubAction {
         }
     }
     end {
+        #Do not process if no issues were provided
+        if ($linters.count -eq 0) {return}
         $groupedLinters = $linters | Group-Object LinterName -AsHashTable
         #TODO: REFACTOR use .values and then sort by name then this more convoluted method
         $sortedLinterNames = $groupedLinters.keys | Sort-Object

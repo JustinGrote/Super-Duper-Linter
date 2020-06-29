@@ -178,8 +178,7 @@ GHAGroup 'Run Linters' {
     }
 }
 
-#TODO: More structured output
-Out-LinterGithubAction -LinterIssue $LinterIssues
+$LinterIssues | Out-LinterGithubAction
 
 #Set exit code to number of errors
 $linterIssueCount = $LinterIssues | Group Severity
