@@ -3,6 +3,9 @@ name: javascript
 
 #A .NET regular expression that matches the file paths that this linter should process. Multiple are supported if you specify this as an array
 filematch: '\.js$' 
+#Required because eslint doesn't search global modules for eslint settings, so we "fake" it with the global folder
+pre: "[Void](New-Item -ItemType SymbolicLink -Path node_modules -Target /usr/lib/node_modules -Force)"
+post: "Remove-Item node_modules -Force"
 #The base command for the linter, either an absolute path or an executable that's available in the $PATH
 command: eslint
 config: .eslintrc.yml
