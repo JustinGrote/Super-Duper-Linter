@@ -11,6 +11,11 @@ class LinterIssue : Microsoft.Windows.PowerShell.ScriptAnalyzer.Generic.Diagnost
     [Microsoft.Windows.PowerShell.ScriptAnalyzer.Generic.DiagnosticSeverity]$Severity
     [System.Collections.Generic.IEnumerable[Microsoft.Windows.PowerShell.ScriptAnalyzer.Generic.CorrectionExtent]]$SuggestedCorrections
 
+    hidden Init([HashTable]$LinterResult) {
+        $linterResult.keys.foreach{
+            $this.$PSItem = $linterResult[$PSItem]
+        }
+    }
     LinterIssue(
         [Microsoft.Windows.PowerShell.ScriptAnalyzer.Generic.DiagnosticRecord]$DiagnosticRecord,
         [String]$LinterName
@@ -23,8 +28,6 @@ class LinterIssue : Microsoft.Windows.PowerShell.ScriptAnalyzer.Generic.Diagnost
     LinterIssue(
         [HashTable]$LinterResult
     ) {
-        $linterResult.keys.foreach{
-            $this.$PSItem = $linterResult[$PSItem]
-        }
+        $this.init($LinterResult)
     }
 }

@@ -61,12 +61,10 @@ function Out-LinterGithubAction {
                     information=2
                 }
                 $linterGroup
-                | Sort-Object                     @{
-                    Expression = {
-                        $sevPriority[[String]($PSItem.severity)]
-                    }
-                    Descending = $false
-                },scriptpath
+                | Sort-Object   {$sevPriority[[String]($PSItem.severity)]},
+                                scriptpath,
+                                line,
+                                rulename
                 | Select-Object @{
                         N='Sev'
                         E={
@@ -82,13 +80,7 @@ function Out-LinterGithubAction {
                             $PSItem.RuleName
                         }
                     },
-                    message,
-                    @{
-                        N='Priority'
-                        E={
-                            $sevPriority[$PSItem.severity]
-                        }
-                    }
+                    message
                 | Format-Table -autosize -wrap
                 | Out-String 
                 | Write-Host

@@ -63,16 +63,15 @@ if ($ENV:GITHUB_ACTIONS) {
 
 GHAGroup 'Startup' {
     Push-Location -StackName basePath $basePath
-    
 
     #Determine which files to process
-    if (-not $All -or -not $Test) {
+    if ($All -or $Test) {
+        Write-Host "Linting all files because 'ALL' or 'TEST' was set to true"
+    } else {
         if ($Path -ne '.') {
             $PathFilter = $Path
         }
         $Path = Get-GHAFileChanges
-    } else {
-        Write-Verbose "Linting all files because 'ALL' was set to true"
     }
 
     Write-Debug "Pre-Evaluation Paths"

@@ -1,12 +1,23 @@
 #This is a docker BuildKit file
 #https://docs.docker.com/develop/develop-images/build_enhancements/
 
+#TEMPORARY: Build custom version of reviewdog with unified input
+#TODO: Use normal reviewdog once PR is merged
+#Builder for reviewdog
+FROM alpine:20200626 AS gobuilder
+RUN apk --no-cache add git go
+ENV GOPATH=/
+RUN go get github.com/reviewdog/errorformat/cmd/errorformat
+
 #Runner: Final Image
 FROM alpine:20200626 AS superduperlinter
+
+#This one matches builder step which should use previous cache
+RUN apk --no-cache add git go
+
 WORKDIR /usr/bin
 
 #Add APKs
-
 RUN echo "http://dl-cdn.alpinelinux.org/alpine/edge/testing" >> /etc/apk/repositories\
     && apk --no-cache add \
         bash git curl file \
@@ -69,8 +80,8 @@ RUN apk add --no-cache \
 COPY --from=hadolint/hadolint /bin/hadolint .
 #TFLint 
 COPY --from=wata727/tflint /usr/local/bin/tflint .
-#ReviewDog
-COPY --from=arachnysdocker/reviewdog /reviewdog .
+#ErrorFormat
+COPY --from=gobuilder /bin/errorformat /usr/bin
 #DotEnv Linter
 RUN wget https://github.com/dotenv-linter/dotenv-linter/releases/latest/download/dotenv-linter-alpine-x86_64.tar.gz -O - -q | tar -xzf -
 #GoLangCI-lint
