@@ -86,7 +86,7 @@ function Format-LinterResult {
                 $LinterResult.stdout
             } elseif ($LinterResult.exitcode -eq 0) {
                 write-verbose "$($linterResult.name): Exited successfully with no output"
-                continue
+                break
             } else {
                 throw "$($linterResult.name): Failed with exit code $($LinterResult.exitcode) and did not have any output"
             }
@@ -102,19 +102,19 @@ function Format-LinterResult {
                 Convert-CheckStyleToLinterIssue $linterResult
             } else {
                 Write-Error "$($linterResult.name): Error Found while running errorformat: $errorFormatResult"
-                continue
+                break
             }
 
             if ($LASTEXITCODE -eq 0 -and $null -eq $errorformatResult) {
                 #No record to return. Move on
-                continue
+                break
             }
         }
         'problemMatcher' {
             if (-not $combinedOutput) {
                 #Assume success if no output
                 Write-Verbose "problemMatcher: command had no output, assuming no issues"
-                continue
+                break
             }
             $problemMatchers = ((Get-Content $LinterResult.problemMatcher) | ConvertFrom-Json).problemMatcher
 
@@ -163,7 +163,7 @@ function Format-LinterResult {
                 $record.message = $linterResult.stderr
             } else {
                 #No record to return, move on
-                continue
+                break
             }
             $LinterResult.filesToLint.foreach{
                 $record.scriptpath = $PSItem
@@ -177,7 +177,7 @@ function Format-LinterResult {
                 $record.message = $combinedOutput
             } else {
                 #No record to return, move on
-                continue
+                break
             }
             $LinterResult.filesToLint.foreach{
                 $record.scriptpath = $PSItem
@@ -195,7 +195,7 @@ function Format-LinterResult {
                 $record.message = "$($linterResult.command) silently exited with exit code $($linterResult.exitcode)"
             } else {
                 #No record to return, move on
-                continue
+                break
             }
             $LinterResult.filesToLint.foreach{
                 $record.scriptpath = $PSItem
