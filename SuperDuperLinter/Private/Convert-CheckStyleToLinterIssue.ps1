@@ -26,18 +26,18 @@ function Convert-CheckStyleToLinterIssue ($linterResult) {
                         continue
                     }
                     $record.message = ($matches['message'])
-                    $record.rulename = $matches['code']
+                    $record.ruleName = $matches['code']
                 } else {
                     #Remove unnecessary whitespace
                     $record.message = $PSItem.message
+                    $record.ruleName = $PSItem.rule
                 }
-    
-                $record.severity = $csLinterMap.$Severity
+                $record.severity = $PSItem.severity ? $PSItem.severity : $csLinterMap.$Severity
                 $record.extent = [ScriptExtent]::new(
                     [ScriptPosition]::new(
                         $record.ScriptPath,
                         $PSItem.line,
-                        $PSItem.col,
+                        $PSItem.column,
                         $null
                     ),
                     $null
