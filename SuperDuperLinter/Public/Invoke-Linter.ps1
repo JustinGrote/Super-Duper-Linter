@@ -52,9 +52,12 @@ function Invoke-Linter {
 
         $linterArgs = $linter.args
         $linterErrTempFile = [io.path]::GetTempFileName()
+
+        #Run the Linter
         if ($linter.pre) {Invoke-Expression $linter.pre}
         $linterOut = & $linter.command @linterArgs $linter.filesToLint 2>$linterErrTempFile
         if ($linter.post) {Invoke-Expression $linter.post}
+        
         #Workaround because you can't direct stderr directly to a variable
         $linterErr = Get-Content -Raw $linterErrTempFile
         Remove-Item $linterErrTempFile

@@ -18,7 +18,7 @@ function Test-Linter {
                 
                 [String]$testFileName = "${statusToTest}*.*"
                 [String]$testMatchPath = (Join-Path $TestPath $testFileName)
-                Write-Debug "${$lintername}: Searching $pwd using $testMatchPath"
+                Write-Debug "${lintername}: Searching $pwd using $testMatchPath"
                 $linter.filesToLint = (Resolve-Path $testMatchPath -Relative -ErrorAction SilentlyContinue) -replace '^\.[\\\/](.+)$','$1'
                 if (-not $linter.filesToLint) {
                     Write-Verbose "${linterName}: No $statusToTest test found"
